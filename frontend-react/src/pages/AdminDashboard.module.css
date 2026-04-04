@@ -1,0 +1,343 @@
+/* ─── Loading ─────────────────────────────────────────────── */
+.loadWrap {
+  min-height: 100vh; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 14px;
+  color: #6b7280; background: #f0f2f5;
+}
+.spinner {
+  width: 38px; height: 38px; border: 4px solid #e5e7eb;
+  border-top-color: #16a34a; border-radius: 50%;
+  animation: spin .75s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── Page ────────────────────────────────────────────────── */
+.page { min-height: 100vh; background: #f0f2f5; }
+
+/* ─── Navbar ──────────────────────────────────────────────── */
+.nav {
+  background: linear-gradient(135deg, #14532d 0%, #166534 50%, #15803d 100%);
+  padding: 0 16px; height: 54px;
+  display: flex; align-items: center; justify-content: space-between;
+  box-shadow: 0 2px 12px rgba(0,0,0,.2);
+  position: sticky; top: 0; z-index: 200;
+}
+
+/* ── Logo ── */
+.brand { display: flex; align-items: center; gap: 10px; }
+.logoMark {
+  display: flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border-radius: 9px;
+  background: rgba(255,255,255,.15);
+  border: 1.5px solid rgba(255,255,255,.3);
+  flex-shrink: 0; gap: 1px;
+}
+.logoK { color: #fbbf24; font-size: .78rem; font-weight: 900; line-height: 1; }
+.logoS { color: #fff;    font-size: .78rem; font-weight: 900; line-height: 1; }
+.logoR { color: #86efac; font-size: .78rem; font-weight: 900; line-height: 1; }
+.brandText { display: flex; flex-direction: column; }
+.brandName { color: #fff; font-size: .9rem; font-weight: 800; line-height: 1.2; letter-spacing: -.2px; }
+.brandSub  { color: rgba(255,255,255,.6); font-size: .58rem; font-weight: 500; line-height: 1; }
+
+/* ── Logout only ── */
+.btnLogout {
+  display: flex; align-items: center; gap: 5px;
+  padding: 6px 13px; background: #dc2626; color: #fff;
+  border: none; border-radius: 8px; font-size: .76rem; font-weight: 700;
+  cursor: pointer; transition: background .2s; white-space: nowrap; font-family: inherit;
+}
+.btnLogout:hover { background: #b91c1c; }
+
+/* kept for any desktop references */
+.navActions { display: flex; align-items: center; gap: 6px; }
+.btnManage { padding: 6px 12px; background: rgba(255,255,255,.15); color: #fff; border: 1px solid rgba(255,255,255,.25); border-radius: 8px; font-size: .76rem; font-weight: 600; cursor: pointer; }
+.btnCalc   { width: 32px; height: 32px; background: rgba(255,255,255,.12); color: #fff; border: 1px solid rgba(255,255,255,.2); border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+/* ─── Body ────────────────────────────────────────────────── */
+.body {
+  max-width: 1280px; margin: 0 auto;
+  padding: 16px 12px 72px;
+  display: flex; flex-direction: column; gap: 16px;
+}
+@media (min-width: 768px) {
+  .body { padding: 20px 20px 40px; }
+}
+
+/* ─── Error ───────────────────────────────────────────────── */
+.errBox {
+  background: #fef2f2; color: #dc2626; border: 1px solid #fecaca;
+  border-radius: 10px; padding: 12px 16px;
+  display: flex; align-items: center; gap: 10px; font-size: .85rem;
+}
+.errBox button {
+  margin-left: auto; padding: 4px 12px; background: #dc2626; color: #fff;
+  border: none; border-radius: 6px; cursor: pointer; font-size: .75rem; font-weight: 600;
+}
+
+/* ─── Stats Grid ──────────────────────────────────────────── */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.stat {
+  background: #fff; border-radius: 12px; padding: 14px 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.07);
+  display: flex; flex-direction: column; align-items: center;
+  gap: 4px; text-align: center;
+}
+.statEmoji { font-size: 1.3rem; line-height: 1; }
+.statVal   { font-size: 1.35rem; font-weight: 800; line-height: 1; }
+.statLbl   { font-size: .68rem; color: #6b7280; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; }
+
+/* ─── Section ─────────────────────────────────────────────── */
+.section {
+  background: #fff; border-radius: 16px;
+  box-shadow: 0 1px 6px rgba(0,0,0,.07); overflow: hidden;
+}
+.secHead {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 16px 12px; border-bottom: 1px solid #f3f4f6; gap: 8px;
+}
+.secTitleRow {
+  display: flex; align-items: center; gap: 8px; flex: 1;
+}
+.redDot {
+  width: 10px; height: 10px; border-radius: 50%; background: #ef4444;
+  flex-shrink: 0; box-shadow: 0 0 0 3px rgba(239,68,68,.2);
+  animation: pulse 1.8s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%,100% { box-shadow: 0 0 0 3px rgba(239,68,68,.2); }
+  50%      { box-shadow: 0 0 0 6px rgba(239,68,68,.08); }
+}
+.secTitle  { font-size: .95rem; font-weight: 800; color: #111827; }
+.secSub    { font-size: .7rem; color: #9ca3af; margin-top: 1px; }
+.activeBadge {
+  background: #fef3c7; color: #d97706; border: 1px solid #fde68a;
+  border-radius: 20px; font-size: .72rem; font-weight: 800;
+  padding: 2px 8px; flex-shrink: 0;
+}
+.refreshBtn {
+  padding: 6px 12px; background: #f3f4f6; color: #374151;
+  border: none; border-radius: 8px; font-size: .78rem; font-weight: 600;
+  cursor: pointer; transition: background .2s; flex-shrink: 0;
+}
+.refreshBtn:hover { background: #e5e7eb; }
+
+/* ─── Empty ───────────────────────────────────────────────── */
+.emptyBox {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 40px 16px; gap: 8px; color: #6b7280;
+}
+.emptyEmoji { font-size: 2.2rem; }
+.emptyBox p { font-size: .88rem; font-weight: 600; margin: 0; }
+
+/* ─── Order Cards (mobile-first, no table) ────────────────── */
+.orderCards {
+  display: flex; flex-direction: column; gap: 0;
+  padding: 8px 0;
+}
+.orderCard {
+  display: flex; align-items: stretch;
+  border-bottom: 1px solid #f3f4f6;
+  transition: background .15s;
+}
+.orderCard:last-child { border-bottom: none; }
+.orderCard:hover { background: #fafafa; }
+.orderCardNew { background: #fffbeb !important; }
+.orderCardNew:hover { background: #fef3c7 !important; }
+
+.orderAccent { width: 4px; flex-shrink: 0; border-radius: 0; }
+.orderBody   { flex: 1; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+
+.orderTop {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+}
+.orderMeta { display: flex; align-items: center; gap: 6px; }
+.orderNum  { font-size: .68rem; color: #9ca3af; font-weight: 700; }
+.orderId   { font-size: .88rem; font-weight: 800; color: #111827; }
+
+.statusPill {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 9px; border-radius: 20px;
+  font-size: .7rem; font-weight: 700; white-space: nowrap; flex-shrink: 0;
+}
+.statusDot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+.orderDetails {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px;
+}
+.detailItem {
+  display: flex; align-items: center; gap: 4px;
+  font-size: .73rem; color: #6b7280;
+}
+.detailIcon { font-size: .8rem; flex-shrink: 0; }
+.addrText   { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 120px; }
+
+.orderFooter {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.orderAmt { font-size: 1rem; font-weight: 800; color: #16a34a; }
+.manageOrderBtn {
+  padding: 5px 12px; background: #f0fdf4; color: #16a34a;
+  border: 1px solid #bbf7d0; border-radius: 8px;
+  font-size: .75rem; font-weight: 700; cursor: pointer; transition: all .2s;
+}
+.manageOrderBtn:hover { background: #dcfce7; }
+
+.goManageBtn {
+  display: block; margin: 12px 16px 16px;
+  padding: 12px; background: #f0fdf4; color: #16a34a;
+  border: 1.5px dashed #86efac; border-radius: 10px;
+  font-size: .85rem; font-weight: 700; cursor: pointer; text-align: center;
+  transition: all .2s; width: calc(100% - 32px);
+}
+.goManageBtn:hover { background: #dcfce7; border-color: #4ade80; }
+
+/* ─── Bottom Grid ─────────────────────────────────────────── */
+.bottomGrid {
+  display: grid; grid-template-columns: 1fr; gap: 14px;
+}
+.card {
+  background: #fff; border-radius: 14px; padding: 16px;
+  box-shadow: 0 1px 6px rgba(0,0,0,.07);
+}
+.cardHead {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
+}
+.cardTitle { font-size: .9rem; font-weight: 800; color: #111827; }
+.chip {
+  padding: 2px 9px; border-radius: 20px; font-size: .72rem; font-weight: 700;
+}
+.empty { color: #9ca3af; text-align: center; padding: 20px; font-size: .83rem; margin: 0; }
+
+.miniList { display: flex; flex-direction: column; gap: 6px; }
+.miniRow  {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; background: #f9fafb; border-radius: 8px;
+}
+.miniDot  { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.miniInfo { flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.miniTitle{ font-size: .82rem; font-weight: 700; color: #111827; }
+.miniSub  { font-size: .7rem; color: #9ca3af; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.miniAmt  { font-size: .85rem; font-weight: 800; color: #16a34a; flex-shrink: 0; }
+
+.avatar {
+  width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(135deg, #16a34a, #4ade80);
+  color: #fff; font-weight: 800; font-size: .8rem;
+  display: flex; align-items: center; justify-content: center;
+}
+.badgeOk   { font-size: .7rem; font-weight: 700; padding: 2px 7px; border-radius: 20px; background: #dcfce7; color: #16a34a; flex-shrink: 0; }
+.badgeWarn { font-size: .7rem; font-weight: 700; padding: 2px 7px; border-radius: 20px; background: #fef3c7; color: #d97706; flex-shrink: 0; }
+
+/* ─── Breakdown ───────────────────────────────────────────── */
+.breakdown { display: flex; flex-direction: column; gap: 8px; }
+.bRow {
+  display: flex; align-items: center; gap: 8px;
+}
+.bDot   { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.bLabel { font-size: .75rem; color: #374151; font-weight: 600; width: 90px; flex-shrink: 0; }
+.bBar   { flex: 1; height: 6px; background: #f3f4f6; border-radius: 10px; overflow: hidden; }
+.bFill  { height: 100%; border-radius: 10px; transition: width .6s ease; min-width: 2px; }
+.bVal   { font-size: .78rem; font-weight: 800; width: 24px; text-align: right; flex-shrink: 0; }
+
+/* ─── Tablet (≥640px) ─────────────────────────────────────── */
+@media (min-width: 640px) {
+  .body { padding: 20px 16px 60px; gap: 18px; }
+  .statsGrid { grid-template-columns: repeat(6, 1fr); gap: 12px; }
+  .stat { padding: 16px 12px; }
+  .statVal { font-size: 1.5rem; }
+  .bottomGrid { grid-template-columns: 1fr 1fr; }
+  .orderDetails { grid-template-columns: repeat(4, 1fr); }
+  .addrText { max-width: 160px; }
+}
+
+/* ─── Laptop (≥1024px) ────────────────────────────────────── */
+@media (min-width: 1024px) {
+  .nav { padding: 0 28px; height: 62px; }
+  .brandName { font-size: 1.05rem; }
+  .brandSub  { font-size: .7rem; }
+  .btnManage, .btnLogout { font-size: .83rem; padding: 7px 16px; }
+  .body { padding: 24px 24px 60px; gap: 20px; }
+  .statsGrid { gap: 14px; }
+  .stat { padding: 18px 14px; }
+  .statEmoji { font-size: 1.5rem; }
+  .statVal   { font-size: 1.65rem; }
+  .statLbl   { font-size: .72rem; }
+  .bottomGrid { grid-template-columns: 1fr 1fr 1fr; }
+  /* On laptop, show order cards in a 2-col grid */
+  .orderCards { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+  .orderCard  { border-bottom: 1px solid #f3f4f6; border-right: 1px solid #f3f4f6; }
+  .orderCard:nth-child(2n) { border-right: none; }
+}
+
+/* ─── Wide (≥1280px) ──────────────────────────────────────── */
+@media (min-width: 1280px) {
+  .orderCards { grid-template-columns: 1fr 1fr 1fr; }
+  .orderCard:nth-child(2n)  { border-right: 1px solid #f3f4f6; }
+  .orderCard:nth-child(3n)  { border-right: none; }
+}
+
+/* ─── Bottom Nav ──────────────────────────────────────────── */
+.bottomNav {
+  display: none;
+}
+@media (max-width: 640px) {
+  .bottomNav {
+    display: flex; position: fixed; bottom: 0; left: 0; right: 0; z-index: 250;
+    background: #fff; border-top: 1px solid #e8e8e8;
+    box-shadow: 0 -2px 10px rgba(0,0,0,.07); height: 54px;
+  }
+  .bnBtn {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2px; background: none; border: none; cursor: pointer; font-family: inherit;
+    font-size: .46rem; font-weight: 600; color: #9ca3af; transition: color .2s; padding: 3px 1px;
+  }
+  .bnBtn svg { stroke: #9ca3af; transition: stroke .2s; }
+  .bnBtn span { line-height: 1; }
+  .bnBtn:hover { color: #16a34a; }
+  .bnBtn:hover svg { stroke: #16a34a; }
+  .bnActive { color: #16a34a !important; }
+  .bnActive svg { stroke: #16a34a !important; }
+  .body { padding-bottom: 70px; }
+}
+
+/* ─── Large screen (TV / projector ≥1920px) ──────────────── */
+@media (min-width: 1920px) {
+  .body { max-width: 1800px; padding: 28px 32px 60px; gap: 24px; }
+  .nav { height: 68px; padding: 0 40px; }
+  .brandName { font-size: 1.1rem; }
+  .brandSub  { font-size: .68rem; }
+  .btnLogout { font-size: .9rem; padding: 8px 18px; }
+  .statsGrid { gap: 18px; }
+  .stat { padding: 22px 18px; border-radius: 16px; }
+  .statEmoji { font-size: 1.8rem; }
+  .statVal   { font-size: 2rem; }
+  .statLbl   { font-size: .8rem; }
+  .secTitle  { font-size: 1.1rem; }
+  .secSub    { font-size: .82rem; }
+  .orderId   { font-size: 1rem; }
+  .orderAmt  { font-size: 1.15rem; }
+  .orderBody { padding: 16px 20px; gap: 10px; }
+  .detailItem { font-size: .85rem; }
+  .cardTitle { font-size: 1.05rem; }
+  .miniTitle { font-size: .95rem; }
+  .miniSub   { font-size: .82rem; }
+  .miniAmt   { font-size: 1rem; }
+  .bLabel    { font-size: .88rem; width: 110px; }
+  .bVal      { font-size: .9rem; width: 30px; }
+  .goManageBtn { font-size: 1rem; padding: 16px; }
+  .refreshBtn  { font-size: .9rem; padding: 8px 16px; }
+  .bottomGrid  { gap: 20px; }
+  .card { padding: 22px; border-radius: 18px; }
+}
+
+/* ─── 4K / Projector (≥2560px) ───────────────────────────── */
+@media (min-width: 2560px) {
+  .body { max-width: 2400px; padding: 36px 48px 80px; }
+  .statVal { font-size: 2.4rem; }
+  .statLbl { font-size: .9rem; }
+  .orderId { font-size: 1.15rem; }
+}
