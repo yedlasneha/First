@@ -1,9 +1,11 @@
 import axios from 'axios';
 
-const AUTH_URL    = import.meta.env.VITE_AUTH_URL    || 'http://localhost:8081';
-const PRODUCT_URL = import.meta.env.VITE_PRODUCT_URL || 'http://localhost:8082';
-const CART_URL    = import.meta.env.VITE_CART_URL    || 'http://localhost:8083';
-const ORDER_URL   = import.meta.env.VITE_ORDER_URL   || 'http://localhost:8084';
+// In production (Vercel), these are relative paths proxied to EC2.
+// In dev, they fall back to direct service ports.
+const AUTH_URL    = import.meta.env.VITE_AUTH_URL    || 'http://localhost:8081/api/auth';
+const PRODUCT_URL = import.meta.env.VITE_PRODUCT_URL || 'http://localhost:8082/api';
+const CART_URL    = import.meta.env.VITE_CART_URL    || 'http://localhost:8083/api/cart';
+const ORDER_URL   = import.meta.env.VITE_ORDER_URL   || 'http://localhost:8084/api/orders';
 
 export const ADMIN_TOKEN_KEY = 'admin_token';
 export const ADMIN_DATA_KEY  = 'admin_data';
@@ -11,7 +13,8 @@ export const USER_TOKEN_KEY  = 'user_token';
 export const USER_DATA_KEY   = 'user_data';
 
 function getToken() {
-  return localStorage.getItem(ADMIN_TOKEN_KEY);
+  // Admin pages use admin_token; user pages use user_token
+  return localStorage.getItem(ADMIN_TOKEN_KEY) || localStorage.getItem(USER_TOKEN_KEY);
 }
 
 export const authApi = axios.create({
