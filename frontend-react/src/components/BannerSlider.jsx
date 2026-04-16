@@ -51,7 +51,7 @@ export default function BannerSlider({ banners = [], loading = false }) {
           )}
           {b.badges?.length > 0 && (
             <div className="flex gap-1.5 mt-2 flex-wrap">
-              {b.badges.map((badge, i) => (
+              {(Array.isArray(b.badges) ? b.badges : []).map((badge, i) => (
                 <span key={i} className="bg-white/20 backdrop-blur-sm text-white text-[10px] sm:text-xs px-2 py-0.5 rounded-full font-medium">
                   {badge}
                 </span>

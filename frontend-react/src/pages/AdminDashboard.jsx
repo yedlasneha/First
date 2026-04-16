@@ -38,8 +38,8 @@ export default function AdminDashboard() {
         orderApi.get('/api/admin/orders'),
         authApi.get('/api/auth/admin/users'),
       ]);
-      if (oRes.status === 'fulfilled') setOrders(oRes.value.data);
-      if (uRes.status === 'fulfilled') setUsers(uRes.value.data);
+      if (oRes.status === 'fulfilled') setOrders(Array.isArray(oRes.value.data) ? oRes.value.data : []);
+      if (uRes.status === 'fulfilled') setUsers(Array.isArray(uRes.value.data) ? uRes.value.data : []);
     } catch { setError('Could not load data.'); }
     finally { setLoading(false); }
   };

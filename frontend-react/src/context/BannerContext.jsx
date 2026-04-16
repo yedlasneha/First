@@ -13,7 +13,8 @@ export function BannerProvider({ children }) {
   const fetchBanners = useCallback(async () => {
     try {
       const r = await productApi.get('/api/banners');
-      if (r.data?.length) setBanners(r.data);
+      const data = Array.isArray(r.data) ? r.data : (r.data?.content || r.data?.data || []);
+      if (data.length) setBanners(data);
     } catch {}
   }, []);
 

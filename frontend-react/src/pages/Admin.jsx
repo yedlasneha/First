@@ -141,7 +141,7 @@ export default function Admin() {
   // ── Product CRUD ───────────────────────────────────────────────────────
   const fetchProducts = async () => {
     setProdLoad(true);
-    try { const r = await fetch(PRODUCT_API); setProducts(await r.json()); }
+    try { const r = await fetch(PRODUCT_API); const d = await r.json(); setProducts(Array.isArray(d) ? d : []); }
     catch { setProdErr('Could not load products.'); }
     finally { setProdLoad(false); }
   };
@@ -225,7 +225,7 @@ export default function Admin() {
   // ── Benefits CRUD ──────────────────────────────────────────────────────
   const fetchBenefits = async () => {
     setBenLoad(true);
-    try { const r = await fetch(BENEFIT_API); setBenefits(await r.json()); }
+    try { const r = await fetch(BENEFIT_API); const d = await r.json(); setBenefits(Array.isArray(d) ? d : []); }
     catch { setBenErr('Could not load benefits.'); }
     finally { setBenLoad(false); }
   };
@@ -277,7 +277,7 @@ export default function Admin() {
       const token = getToken();
       const res = await fetch(ORDER_API,{headers:{Authorization:`Bearer ${token}`}});
       if (!res.ok) throw new Error();
-      setOrders(await res.json());
+      const d = await res.json(); setOrders(Array.isArray(d) ? d : []);
     } catch { setOrdErr('Could not load orders. Is order service running on port 8084?'); }
     finally { setOrdLoad(false); }
   };
@@ -470,7 +470,7 @@ export default function Admin() {
     setBulkLoad(true);
     try {
       const token = getToken();
-      const res = await fetch(`${import.meta.env.VITE_ORDER_URL || 'http://localhost:8084'}/bulk-orders`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE ?? ''}/api/orders/bulk-orders`, {
         headers: { ...(token ? { Authorization:`Bearer ${token}` } : {}) }
       });
       if (res.ok) { setBulkOrders(await res.json()); }
@@ -485,7 +485,7 @@ export default function Admin() {
   // ── Help & Support CRUD ────────────────────────────────────────────────
   const fetchHelp = async () => {
     setHelpLoad(true);
-    try { const r = await fetch(HELP_API); setHelpFaqs(await r.json()); }
+    try { const r = await fetch(HELP_API); const d = await r.json(); setHelpFaqs(Array.isArray(d) ? d : []); }
     catch { setHelpErr('Could not load help FAQs.'); }
     finally { setHelpLoad(false); }
   };
@@ -528,7 +528,7 @@ export default function Admin() {
   // ── About Us CRUD ──────────────────────────────────────────────────────
   const fetchAbout = async () => {
     setAboutLoad(true);
-    try { const r = await fetch(ABOUT_API); setAboutUs(await r.json()); }
+    try { const r = await fetch(ABOUT_API); const d = await r.json(); setAboutUs(Array.isArray(d) ? d : []); }
     catch { setAboutErr('Could not load about us.'); }
     finally { setAboutLoad(false); }
   };
@@ -571,7 +571,7 @@ export default function Admin() {
   // ── Payment Settings ───────────────────────────────────────────────────
   const fetchPaymentSettings = async () => {
     try {
-      const r = await fetch(`${import.meta.env.VITE_PRODUCT_URL || 'http://localhost:8082'}/payment-settings`);
+      const r = await fetch(`${import.meta.env.VITE_API_BASE ?? ''}/api/payment-settings`);
       if (r.ok) { const d = await r.json(); setPayForm({ upiId:d.upiId||'', upiName:d.upiName||'', qrImage:d.qrImage||'', bankName:d.bankName||'', accountHolder:d.accountHolder||'', accountNumber:d.accountNumber||'', ifscCode:d.ifscCode||'', branch:d.branch||'', instructions:d.instructions||'' }); }
     } catch {}
   };
