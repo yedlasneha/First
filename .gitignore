@@ -30,7 +30,9 @@ Thumbs.db
 logs/
 
 # Environment / secrets
-*.env
+.env
+.env.local
+.env.production
 application-local.properties
 
 # Kiro internal

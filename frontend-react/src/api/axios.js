@@ -1,9 +1,9 @@
 import axios from 'axios';
 
-const AUTH_URL    = 'http://localhost:8081';
-const PRODUCT_URL = 'http://localhost:8082';
-const CART_URL    = 'http://localhost:8083';
-const ORDER_URL   = 'http://localhost:8084';
+const AUTH_URL    = import.meta.env.VITE_AUTH_URL    || 'http://localhost:8081';
+const PRODUCT_URL = import.meta.env.VITE_PRODUCT_URL || 'http://localhost:8082';
+const CART_URL    = import.meta.env.VITE_CART_URL    || 'http://localhost:8083';
+const ORDER_URL   = import.meta.env.VITE_ORDER_URL   || 'http://localhost:8084';
 
 export const ADMIN_TOKEN_KEY = 'admin_token';
 export const ADMIN_DATA_KEY  = 'admin_data';
