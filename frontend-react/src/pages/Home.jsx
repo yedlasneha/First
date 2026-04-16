@@ -86,13 +86,13 @@ export default function Home() {
       .finally(() => setLoadBanner(false));
 
     categoryApi.getAll()
-      .then(r => setCategories(r.data || []))
+      .then(r => setCategories(Array.isArray(r.data) ? r.data : []))
       .catch(() => {})
       .finally(() => setLoadCat(false));
 
     productApi.getAll()
       .then(r => {
-        const all = (r.data || []).filter(p => p.active !== false);
+        const all = (Array.isArray(r.data) ? r.data : []).filter(p => p.active !== false);
         setProducts(all);
         const disc = all.filter(p => p.discountPercentage > 0);
         setFeatured(disc.length >= 4 ? disc.slice(0, 8) : all.slice(0, 8));

@@ -296,14 +296,14 @@ export default function Profile() {
   const openHelp = async () => {
     setTab('help');
     if (!helpData.length) {
-      try { const r = await miscApi.getHelp(); setHelpData(r.data || []); } catch {}
+      try { const r = await miscApi.getHelp(); setHelpData(Array.isArray(r.data) ? r.data : []); } catch {}
     }
   };
 
   const openAbout = async () => {
     setTab('about');
     if (!aboutData.length) {
-      try { const r = await miscApi.getAbout(); setAboutData(r.data || []); } catch {}
+      try { const r = await miscApi.getAbout(); setAboutData(Array.isArray(r.data) ? r.data : []); } catch {}
     }
   };
 

@@ -52,7 +52,7 @@ export default function Products() {
   /* Always keep a full product list for client-side fallback search */
   useEffect(() => {
     productApi.getAll()
-      .then(r => setAllProducts((r.data || []).filter(p => p.active !== false)))
+      .then(r => setAllProducts((Array.isArray(r.data) ? r.data : []).filter(p => p.active !== false)))
       .catch(() => {});
   }, []);
 
@@ -66,7 +66,7 @@ export default function Products() {
         // 1. Try backend search first
         try {
           const r = await productApi.search(qParam);
-          results = (r.data || []).filter(p => p.active !== false);
+          results = (Array.isArray(r.data) ? r.data : []).filter(p => p.active !== false);
         } catch { results = []; }
 
         // 2. If backend returns nothing, fall back to client-side name match
@@ -76,7 +76,7 @@ export default function Products() {
           let base = allProducts;
           if (!base.length) {
             const r = await productApi.getAll();
-            base = (r.data || []).filter(p => p.active !== false);
+            base = (Array.isArray(r.data) ? r.data : []).filter(p => p.active !== false);
             setAllProducts(base);
           }
           results = base.filter(p =>
@@ -87,13 +87,13 @@ export default function Products() {
         }
       } else if (catId) {
         const r = await productApi.getByCategory(catId);
-        results = (r.data || []).filter(p => p.active !== false);
+        results = (Array.isArray(r.data) ? r.data : []).filter(p => p.active !== false);
       } else if (type) {
         const r = await productApi.getByType(type);
-        results = (r.data || []).filter(p => p.active !== false);
+        results = (Array.isArray(r.data) ? r.data : []).filter(p => p.active !== false);
       } else {
         const r = await productApi.getAll();
-        results = (r.data || []).filter(p => p.active !== false);
+        results = (Array.isArray(r.data) ? r.data : []).filter(p => p.active !== false);
       }
 
       setProducts(results);
@@ -106,7 +106,7 @@ export default function Products() {
 
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
   useEffect(() => {
-    categoryApi.getAll().then(r => setCategories(r.data || [])).catch(() => {});
+    categoryApi.getAll().then(r => setCategories(Array.isArray(r.data) ? r.data : [])).catch(() => {});
   }, []);
 
   const sorted = [...products].sort((a, b) => {

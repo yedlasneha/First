@@ -27,7 +27,7 @@ export default function Orders() {
     if (!isLoggedIn) { navigate('/login'); return; }
     if (!user?.userId) return;
     orderApi.getMyOrders(user.userId)
-      .then(r => setOrders(r.data || []))
+      .then(r => setOrders(Array.isArray(r.data) ? r.data : []))
       .catch(() => setError('Could not load orders. Please try again.'))
       .finally(() => setLoading(false));
   }, [user?.userId, isLoggedIn]);

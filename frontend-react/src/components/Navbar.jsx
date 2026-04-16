@@ -215,13 +215,13 @@ export default function Navbar() {
         // Ensure we have all products cached for fuzzy matching
         if (!allProdRef.current.length) {
           const all = await productApi.getAll();
-          allProdRef.current = (all.data || []).filter(p => p.active !== false);
+          allProdRef.current = (Array.isArray(all.data) ? all.data : []).filter(p => p.active !== false);
         }
         const allProds = allProdRef.current;
 
         // 1. Backend search with cleaned query
         const r = await productApi.search(clean);
-        let list = (r.data || []).filter(p => p.active !== false).slice(0, 8);
+        let list = (Array.isArray(r.data) ? r.data : []).filter(p => p.active !== false).slice(0, 8);
 
         // 2. Client-side partial match fallback
         if (list.length === 0) {

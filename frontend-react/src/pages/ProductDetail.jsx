@@ -41,12 +41,12 @@ export default function ProductDetail() {
       productApi.getVariants(id).catch(() => ({ data: [] })),
     ]).then(([pRes, vRes]) => {
       setProduct(pRes.data);
-      setVariants(vRes.data || []);
+      setVariants(Array.isArray(vRes.data) ? vRes.data : []);
     }).catch(() => navigate('/products'))
       .finally(() => setLoading(false));
 
     productApi.getBenefits(id)
-      .then(r => setBenefits(r.data || []))
+      .then(r => setBenefits(Array.isArray(r.data) ? r.data : []))
       .catch(() => setBenefits([]))
       .finally(() => setLoadBen(false));
   }, [id]);

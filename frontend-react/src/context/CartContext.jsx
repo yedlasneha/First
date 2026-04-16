@@ -14,7 +14,7 @@ export function CartProvider({ children }) {
     setLoading(true);
     try {
       const r = await cartApi.get(user.userId);
-      setItems(r.data || []);
+      setItems(Array.isArray(r.data) ? r.data : []);
     } catch { setItems([]); }
     finally { setLoading(false); }
   }, [isLoggedIn, user?.userId]);
