@@ -1,0 +1,15 @@
+{
+  "buildCommand": "cd frontend-react && npm install && npm run build",
+  "outputDirectory": "frontend-react/dist",
+  "installCommand": "cd frontend-react && npm install",
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "http://54.172.181.237:8080/api/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
