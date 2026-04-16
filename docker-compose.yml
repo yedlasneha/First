@@ -24,7 +24,7 @@ services:
     container_name: ksr-api-gateway
     restart: always
     ports:
-      - "8080:80"
+      - "80:80"
     volumes:
       - ./api-gateway.conf:/etc/nginx/nginx.conf
     depends_on:
