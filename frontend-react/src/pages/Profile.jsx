@@ -1,306 +1,464 @@
-﻿import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import {
+  ChevronRight, Package, Heart, MapPin, Sun, Moon,
+  LogOut, HelpCircle, Info, FileText, ArrowLeft,
+  Plus, Trash2, CheckCircle, Edit3, User, Mail,
+  Home
+} from 'lucide-react';
 import { useUserAuth } from '../context/UserAuthContext';
+import { useToast } from '../context/ToastContext';
 import { useTheme } from '../context/ThemeContext';
-import { authApi, productApi } from '../api/axios';
-import logo from '../assets/icon.png';
+import { useWishlist } from '../context/WishlistContext';
+import { authApi, miscApi } from '../api/services';
+import { Skeleton } from '../components/Skeleton';
 
-// ── SVG icons ─────────────────────────────────────────────────────────────
-const IcBack    = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>;
-const IcOrders  = () => <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>;
-const IcProfile = () => <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>;
-const IcHelp    = () => <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>;
-const IcTerms   = () => <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>;
-const IcAbout   = () => <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>;
-const IcLogout  = () => <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>;
-const IcChevron = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>;
-const IcSun     = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>;
-const IcMoon    = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>;
+/* ── Address helpers ─────────────────────────────────────────── */
+const ADDR_KEY = (uid) => `ksr_addresses_${uid}`;
 
-// Avatar with colour based on first letter
-const GRAD = {A:'#f97316,#ea580c',B:'#8b5cf6,#7c3aed',C:'#06b6d4,#0891b2',D:'#ec4899,#db2777',E:'#10b981,#059669',F:'#f59e0b,#d97706',G:'#6366f1,#4f46e5',H:'#14b8a6,#0d9488',I:'#ef4444,#dc2626',J:'#84cc16,#65a30d',K:'#16a34a,#15803d',L:'#0ea5e9,#0284c7',M:'#a855f7,#9333ea',N:'#f97316,#ea580c',O:'#22c55e,#16a34a',P:'#3b82f6,#2563eb',Q:'#ec4899,#db2777',R:'#ef4444,#dc2626',S:'#f59e0b,#d97706',T:'#06b6d4,#0891b2',U:'#8b5cf6,#7c3aed',V:'#10b981,#059669',W:'#6366f1,#4f46e5',X:'#14b8a6,#0d9488',Y:'#f97316,#ea580c',Z:'#a855f7,#9333ea'};
+function loadAddresses(uid) {
+  try { return JSON.parse(localStorage.getItem(ADDR_KEY(uid))) || []; } catch { return []; }
+}
+function saveAddresses(uid, list) {
+  localStorage.setItem(ADDR_KEY(uid), JSON.stringify(list));
+}
 
-function Avatar({ name, email, size = 72 }) {
-  const letter = (name || email || 'U').trim()[0].toUpperCase();
-  const [a, b] = (GRAD[letter] || '#16a34a,#15803d').split(',');
+/* ── Reusable sub-components ─────────────────────────────────── */
+function BackBtn({ onClick }) {
   return (
-    <div style={{ width:size, height:size, borderRadius:'50%', background:`linear-gradient(135deg,${a},${b})`,
-      color:'#fff', display:'flex', alignItems:'center', justifyContent:'center',
-      fontSize:size*0.38+'px', fontWeight:800, boxShadow:'0 4px 16px rgba(0,0,0,0.2)', flexShrink:0 }}>
-      {letter}
+    <button onClick={onClick}
+      className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-5 transition-colors font-medium">
+      <ArrowLeft className="w-4 h-4" /> Back
+    </button>
+  );
+}
+
+function Section({ title, children }) {
+  return (
+    <div className="mb-3">
+      <p className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest px-1 mb-1.5">{title}</p>
+      <div className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700 shadow-sm">
+        {children}
+      </div>
     </div>
   );
 }
 
-// Expandable accordion row
-function Accordion({ IcComp, label, dark, c, children }) {
-  const [open, setOpen] = useState(false);
+function MenuItem({ Icon, label, to, onClick, danger, right, badge }) {
+  const base = `w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium border-b border-gray-50 dark:border-gray-700/50 last:border-0 transition-colors`;
+  const color = danger
+    ? 'text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20'
+    : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50';
+  const inner = (
+    <>
+      {Icon && <Icon className="w-[18px] h-[18px] shrink-0 text-gray-400 dark:text-gray-500" />}
+      <span className="flex-1 text-left">{label}</span>
+      {badge != null && badge > 0 && (
+        <span className="bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 text-xs font-bold px-2 py-0.5 rounded-full">{badge}</span>
+      )}
+      {right !== undefined
+        ? right
+        : <ChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600 shrink-0" />}
+    </>
+  );
+  if (to) return <Link to={to} className={`${base} ${color}`}>{inner}</Link>;
+  return <button onClick={onClick} className={`${base} ${color}`}>{inner}</button>;
+}
+
+/* ── Address Form ────────────────────────────────────────────── */
+const EMPTY_ADDR = { label: 'Home', line1: '', line2: '', city: '', pincode: '', phone: '' };
+
+function AddressForm({ initial, onSave, onCancel }) {
+  const [form, setForm] = useState(initial || EMPTY_ADDR);
+  const f = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
+
+  const inputCls = "w-full px-3.5 py-2.5 border border-gray-200 dark:border-gray-600 rounded-xl text-sm outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 dark:bg-gray-700 dark:text-white transition-all";
+
   return (
-    <div style={{ borderBottom:`1px solid ${c.border}` }}>
-      <button onClick={() => setOpen(v => !v)}
-        style={{ width:'100%', display:'flex', alignItems:'center', gap:12, padding:'13px 16px', background:'none', border:'none', cursor:'pointer' }}>
-        <span style={{ width:32, height:32, borderRadius:8, background:dark?'#1e3a5f':'#eff6ff', display:'flex', alignItems:'center', justifyContent:'center', color:dark?'#60a5fa':'#3b82f6', flexShrink:0 }}>
-          <IcComp />
-        </span>
-        <span style={{ flex:1, fontWeight:600, fontSize:'0.88rem', color:c.text, textAlign:'left' }}>{label}</span>
-        <span style={{ color:c.sub, display:'flex', transition:'transform 0.2s', transform:open?'rotate(90deg)':'none' }}><IcChevron /></span>
-      </button>
-      {open && (
-        <div style={{ padding:'0 16px 14px 60px', fontSize:'0.82rem', color:c.sub, lineHeight:1.7 }}>
-          {children}
+    <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-5 border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col gap-3">
+      {/* Label chips */}
+      <div>
+        <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">Address type</p>
+        <div className="flex gap-2 flex-wrap">
+          {['Home', 'Work', 'Other'].map(l => (
+            <button key={l} type="button" onClick={() => setForm(p => ({ ...p, label: l }))}
+              className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all ${form.label === l ? 'bg-green-600 text-white border-green-600' : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:border-green-400'}`}>
+              {l === 'Home' ? '🏠' : l === 'Work' ? '💼' : '📍'} {l}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="sm:col-span-2">
+          <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1 block">Address Line 1 *</label>
+          <input value={form.line1} onChange={f('line1')} placeholder="House / Flat / Building no." className={inputCls} />
+        </div>
+        <div className="sm:col-span-2">
+          <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1 block">Address Line 2</label>
+          <input value={form.line2} onChange={f('line2')} placeholder="Street, Area, Landmark" className={inputCls} />
+        </div>
+        <div>
+          <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1 block">City *</label>
+          <input value={form.city} onChange={f('city')} placeholder="City" className={inputCls} />
+        </div>
+        <div>
+          <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1 block">Pincode *</label>
+          <input value={form.pincode} onChange={f('pincode')} placeholder="500001" maxLength={6} inputMode="numeric" className={inputCls} />
+        </div>
+        <div className="sm:col-span-2">
+          <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1 block">Phone number</label>
+          <input value={form.phone} onChange={f('phone')} placeholder="+91 XXXXX XXXXX" type="tel" className={inputCls} />
+        </div>
+      </div>
+
+      <div className="flex gap-2 pt-1">
+        <button type="button" onClick={onCancel}
+          className="flex-1 py-2.5 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 font-semibold rounded-xl text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-all">
+          Cancel
+        </button>
+        <button type="button"
+          onClick={() => { if (!form.line1.trim() || !form.city.trim() || !form.pincode.trim()) return; onSave(form); }}
+          className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl text-sm transition-all">
+          Save Address
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ── Addresses Tab ───────────────────────────────────────────── */
+function AddressesTab({ userId, onBack }) {
+  const { show } = useToast();
+  const [addresses, setAddresses] = useState(() => loadAddresses(userId));
+  const [defaultIdx, setDefaultIdx] = useState(() => {
+    try { return parseInt(localStorage.getItem(`ksr_default_addr_${userId}`)) || 0; } catch { return 0; }
+  });
+  const [adding,   setAdding]   = useState(false);
+  const [editIdx,  setEditIdx]  = useState(null); // index being edited
+
+  const persist = (list, defIdx) => {
+    saveAddresses(userId, list);
+    localStorage.setItem(`ksr_default_addr_${userId}`, defIdx);
+    setAddresses(list);
+    setDefaultIdx(defIdx);
+  };
+
+  const handleAdd = (form) => {
+    const next = [...addresses, { ...form, id: Date.now() }];
+    persist(next, defaultIdx);
+    setAdding(false);
+    show('Address saved!');
+  };
+
+  const handleEdit = (form) => {
+    const next = addresses.map((a, i) => i === editIdx ? { ...form, id: a.id } : a);
+    persist(next, defaultIdx);
+    setEditIdx(null);
+    show('Address updated!');
+  };
+
+  const handleDelete = (idx) => {
+    const next = addresses.filter((_, i) => i !== idx);
+    const newDef = defaultIdx >= next.length ? Math.max(0, next.length - 1) : defaultIdx;
+    persist(next, newDef);
+    show('Address removed');
+  };
+
+  const setDefault = (idx) => {
+    localStorage.setItem(`ksr_default_addr_${userId}`, idx);
+    setDefaultIdx(idx);
+    show('Default address updated');
+  };
+
+  return (
+    <div>
+      <BackBtn onClick={onBack} />
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-black text-gray-900 dark:text-white">Saved Addresses</h2>
+        {!adding && editIdx === null && (
+          <button onClick={() => setAdding(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-xl transition-all">
+            <Plus className="w-3.5 h-3.5" /> Add New
+          </button>
+        )}
+      </div>
+
+      {/* Add form */}
+      {adding && <div className="mb-4"><AddressForm onSave={handleAdd} onCancel={() => setAdding(false)} /></div>}
+
+      {/* Address cards */}
+      {addresses.length === 0 && !adding ? (
+        <div className="text-center py-14 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700">
+          <MapPin className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+          <p className="font-semibold text-gray-600 dark:text-gray-400 text-sm mb-1">No saved addresses</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">Add an address for faster checkout</p>
+          <button onClick={() => setAdding(true)}
+            className="px-5 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-xl transition-all">
+            + Add Address
+          </button>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {addresses.map((addr, idx) => (
+            <div key={addr.id || idx}>
+              {editIdx === idx ? (
+                <AddressForm initial={addr} onSave={handleEdit} onCancel={() => setEditIdx(null)} />
+              ) : (
+                <div className={`bg-white dark:bg-gray-800 rounded-2xl p-4 border-2 transition-all shadow-sm ${idx === defaultIdx ? 'border-green-500' : 'border-gray-100 dark:border-gray-700'}`}>
+                  <div className="flex items-start gap-3">
+                    {/* Icon */}
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${idx === defaultIdx ? 'bg-green-100 dark:bg-green-900/30' : 'bg-gray-100 dark:bg-gray-700'}`}>
+                      <span className="text-base">{addr.label === 'Home' ? '🏠' : addr.label === 'Work' ? '💼' : '📍'}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="font-bold text-gray-800 dark:text-gray-100 text-sm">{addr.label}</span>
+                        {idx === defaultIdx && (
+                          <span className="text-[10px] font-bold text-green-600 bg-green-50 dark:bg-green-900/30 px-2 py-0.5 rounded-full">Default</span>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
+                        {[addr.line1, addr.line2, addr.city, addr.pincode].filter(Boolean).join(', ')}
+                      </p>
+                      {addr.phone && <p className="text-xs text-gray-400 mt-0.5">{addr.phone}</p>}
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-50 dark:border-gray-700">
+                    {idx !== defaultIdx && (
+                      <button onClick={() => setDefault(idx)}
+                        className="flex items-center gap-1 text-xs text-green-600 font-semibold hover:underline">
+                        <CheckCircle className="w-3.5 h-3.5" /> Set Default
+                      </button>
+                    )}
+                    <button onClick={() => { setEditIdx(idx); setAdding(false); }}
+                      className="flex items-center gap-1 text-xs text-blue-500 font-semibold hover:underline ml-auto">
+                      <Edit3 className="w-3.5 h-3.5" /> Edit
+                    </button>
+                    <button onClick={() => handleDelete(idx)}
+                      className="flex items-center gap-1 text-xs text-red-500 font-semibold hover:underline">
+                      <Trash2 className="w-3.5 h-3.5" /> Delete
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       )}
     </div>
   );
 }
 
-// Simple menu row
-function MenuRow({ IcComp, label, sub, onClick, danger, c, noBorder }) {
-  return (
-    <button onClick={onClick}
-      style={{ width:'100%', display:'flex', alignItems:'center', gap:12, padding:'13px 16px',
-        background:'none', border:'none', cursor:'pointer', borderBottom:noBorder?'none':`1px solid ${c.border}` }}>
-      <span style={{ width:32, height:32, borderRadius:8,
-        background:danger?(c.dangerBg):(c.iconBg),
-        display:'flex', alignItems:'center', justifyContent:'center',
-        color:danger?'#ef4444':c.sub, flexShrink:0 }}>
-        <IcComp />
-      </span>
-      <div style={{ flex:1, textAlign:'left' }}>
-        <p style={{ margin:0, fontWeight:600, fontSize:'0.88rem', color:danger?'#ef4444':c.text }}>{label}</p>
-        {sub && <p style={{ margin:0, fontSize:'0.72rem', color:c.sub }}>{sub}</p>}
-      </div>
-      {!danger && <span style={{ color:c.sub, display:'flex' }}><IcChevron /></span>}
-    </button>
-  );
-}
-
+/* ── Main Profile Page ───────────────────────────────────────── */
 export default function Profile() {
-  const { user, login, logout } = useUserAuth();
-  const { dark, toggle: toggleTheme } = useTheme();
-  const navigate = useNavigate();
+  const { user, isLoggedIn, logout, refreshProfile } = useUserAuth();
+  const { show }   = useToast();
+  const { dark, toggle } = useTheme();
+  const { count: wishCount } = useWishlist();
+  const navigate   = useNavigate();
 
-  const [section, setSection]   = useState('menu'); // 'menu' | 'editProfile'
-  const [form, setForm]         = useState({ name:'', email:'', address:'', receiverName:'', receiverMobile:'' });
-  const [loading, setLoading]   = useState(true);
-  const [saving, setSaving]     = useState(false);
-  const [saved, setSaved]       = useState(false);
-  const [error, setError]       = useState('');
-  const [helpFaqs, setHelpFaqs] = useState([]);
-  const [aboutUs,  setAboutUs]  = useState([]);
+  // tab: 'menu' | 'edit' | 'addresses' | 'help' | 'about'
+  const [tab,     setTab]     = useState('menu');
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving,  setSaving]  = useState(false);
+  const [form,    setForm]    = useState({ name: '', email: '', address: '', receiverName: '', receiverMobile: '' });
+  const [helpData,  setHelpData]  = useState([]);
+  const [aboutData, setAboutData] = useState([]);
 
   useEffect(() => {
-    if (!user) { navigate('/login'); return; }
-    authApi.get(`/api/auth/profile/${user.userId}`)
-      .then(r => { const d = r.data; setForm({ name:d.name||'', email:d.email||'', address:d.address||'', receiverName:d.receiverName||'', receiverMobile:d.receiverMobile||'' }); })
-      .catch(() => setForm({ name:user.name||'', email:user.email||'', address:'', receiverName:'', receiverMobile:'' }))
+    if (!isLoggedIn) { navigate('/login'); return; }
+    if (!user?.userId) return;
+    authApi.getProfile(user.userId)
+      .then(r => {
+        setProfile(r.data);
+        setForm({ name: r.data.name || '', email: r.data.email || '', address: r.data.address || '', receiverName: r.data.receiverName || '', receiverMobile: r.data.receiverMobile || '' });
+      })
+      .catch(() => show('Could not load profile', 'error'))
       .finally(() => setLoading(false));
-    productApi.get('/api/help').then(r => setHelpFaqs(r.data||[])).catch(()=>{});
-    productApi.get('/api/about').then(r => setAboutUs(r.data||[])).catch(()=>{});
-  }, [user]);
+  }, [user?.userId, isLoggedIn]);
 
-  const handleSave = async (e) => {
-    e.preventDefault(); setError(''); setSaving(true);
+  const save = async (e) => {
+    e.preventDefault();
+    setSaving(true);
     try {
-      await authApi.put(`/api/auth/profile/${user.userId}`, form);
-      login({ ...user, name:form.name, email:form.email, token:localStorage.getItem('user_token') });
-      setSaved(true); setTimeout(() => setSaved(false), 2500);
-    } catch (err) { setError(err.response?.data?.message || 'Failed to save profile'); }
+      await authApi.saveProfile(user.userId, form);
+      await refreshProfile();
+      show('Profile saved!');
+      setTab('menu');
+    } catch { show('Failed to save profile', 'error'); }
     finally { setSaving(false); }
   };
 
-  // ── Colour tokens ──────────────────────────────────────────────────────
-  const c = {
-    bg:       dark ? '#0f172a' : '#f1f5f9',
-    card:     dark ? '#1e293b' : '#ffffff',
-    border:   dark ? '#334155' : '#e2e8f0',
-    text:     dark ? '#f1f5f9' : '#0f172a',
-    sub:      dark ? '#94a3b8' : '#64748b',
-    inputBg:  dark ? '#0f172a' : '#f8fafc',
-    inputBdr: dark ? '#334155' : '#e2e8f0',
-    iconBg:   dark ? '#1e293b' : '#f8fafc',
-    dangerBg: dark ? '#3b1a1a' : '#fef2f2',
+  const openHelp = async () => {
+    setTab('help');
+    if (!helpData.length) {
+      try { const r = await miscApi.getHelp(); setHelpData(r.data || []); } catch {}
+    }
   };
 
-  const inputStyle = { width:'100%', padding:'11px 14px', border:`1.5px solid ${c.inputBdr}`, borderRadius:10, fontSize:'0.9rem', outline:'none', boxSizing:'border-box', background:c.inputBg, color:c.text, fontFamily:'inherit' };
-  const labelStyle = { fontSize:'0.72rem', fontWeight:700, color:c.sub, display:'block', marginBottom:5, textTransform:'uppercase', letterSpacing:0.5 };
-  const cardStyle  = { background:c.card, borderRadius:16, border:`1px solid ${c.border}`, overflow:'hidden', marginBottom:12 };
-  const sectionLabel = { margin:'0 0 6px 2px', fontSize:'0.68rem', fontWeight:700, color:c.sub, textTransform:'uppercase', letterSpacing:0.8 };
+  const openAbout = async () => {
+    setTab('about');
+    if (!aboutData.length) {
+      try { const r = await miscApi.getAbout(); setAboutData(r.data || []); } catch {}
+    }
+  };
+
+  if (!isLoggedIn) return null;
+
+  const inputCls = "w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl text-sm outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 dark:bg-gray-700 dark:text-white transition-all";
 
   return (
-    <div style={{ minHeight:'100vh', background:c.bg, fontFamily:"'Inter','Segoe UI',sans-serif", transition:'background 0.2s' }}>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-20 lg:pb-6">
+      <div className="w-full px-3 sm:px-4 lg:px-6 py-4 sm:py-6">
 
-      {/* Header */}
-      <header style={{ background:c.card, borderBottom:`1px solid ${c.border}`, position:'sticky', top:0, zIndex:100, boxShadow:'0 1px 8px rgba(0,0,0,0.06)' }}>
-        <div style={{ maxWidth:600, margin:'0 auto', padding:'0 16px', height:54, display:'flex', alignItems:'center', gap:10 }}>
-          <button onClick={() => section === 'editProfile' ? setSection('menu') : navigate('/home')}
-            style={{ background:'none', border:'none', cursor:'pointer', color:c.sub, display:'flex', alignItems:'center', gap:4, fontWeight:600, fontSize:'0.85rem' }}>
-            <IcBack /> {section === 'editProfile' ? 'Back' : 'Home'}
-          </button>
-          <div style={{ flex:1, display:'flex', alignItems:'center', gap:7 }}>
-            <img src={logo} alt="KSR" style={{ width:24, height:24, borderRadius:6 }} />
-            <span style={{ fontWeight:800, fontSize:'0.9rem', color:c.text }}>
-              {section === 'editProfile' ? 'Edit Profile' : 'My Account'}
-            </span>
-          </div>
-          {/* Theme toggle */}
-          <button onClick={toggleTheme}
-            style={{ width:34, height:34, borderRadius:'50%', border:`1.5px solid ${c.border}`, background:c.iconBg, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:dark?'#fbbf24':c.sub, flexShrink:0 }}>
-            {dark ? <IcSun /> : <IcMoon />}
-          </button>
-        </div>
-      </header>
+        {/* ── Addresses tab ── */}
+        {tab === 'addresses' && (
+          <AddressesTab userId={user?.userId} onBack={() => setTab('menu')} />
+        )}
 
-      <main style={{ maxWidth:600, margin:'0 auto', paddingBottom:60 }}>
-
-        {/* Hero banner */}
-        <div style={{ background:dark?'linear-gradient(135deg,#1a3a2a,#0f2318)':'linear-gradient(135deg,#16a34a,#15803d)', padding:'28px 20px 22px', display:'flex', flexDirection:'column', alignItems:'center', gap:10 }}>
-          <Avatar name={user?.name} email={user?.email} size={76} />
-          <div style={{ textAlign:'center' }}>
-            <p style={{ margin:0, fontWeight:800, fontSize:'1.05rem', color:'#fff' }}>{user?.name || 'Welcome'}</p>
-            <p style={{ margin:'3px 0 0', fontSize:'0.75rem', color:'rgba(255,255,255,0.65)' }}>{user?.email}</p>
-          </div>
-          {section === 'menu' && (
-            <button onClick={() => setSection('editProfile')}
-              style={{ marginTop:4, padding:'6px 20px', background:'rgba(255,255,255,0.15)', color:'#fff', border:'1.5px solid rgba(255,255,255,0.3)', borderRadius:20, fontSize:'0.78rem', fontWeight:600, cursor:'pointer' }}>
-              Edit Profile
-            </button>
-          )}
-        </div>
-
-        <div style={{ padding:'16px 14px 0' }}>
-          {section === 'menu' ? (
-            <>
-              {/* Account section */}
-              <p style={sectionLabel}>Account</p>
-              <div style={cardStyle}>
-                <MenuRow IcComp={IcOrders}  label="My Orders"     sub="Track & view your orders"         onClick={() => navigate('/orders')}       c={c} />
-                <MenuRow IcComp={IcProfile} label="Edit Profile"  sub="Name, email, delivery address"    onClick={() => setSection('editProfile')} c={c} noBorder />
-              </div>
-
-              {/* Preferences section */}
-              <p style={{ ...sectionLabel, marginTop:12 }}>Preferences</p>
-              <div style={cardStyle}>
-                <button onClick={toggleTheme}
-                  style={{ width:'100%', display:'flex', alignItems:'center', gap:12, padding:'13px 16px', background:'none', border:'none', cursor:'pointer' }}>
-                  <span style={{ width:32, height:32, borderRadius:8, background:c.iconBg, display:'flex', alignItems:'center', justifyContent:'center', color:dark?'#fbbf24':c.sub, flexShrink:0 }}>
-                    {dark ? <IcSun /> : <IcMoon />}
-                  </span>
-                  <div style={{ flex:1, textAlign:'left' }}>
-                    <p style={{ margin:0, fontWeight:600, fontSize:'0.88rem', color:c.text }}>{dark ? 'Light Mode' : 'Dark Mode'}</p>
-                    <p style={{ margin:0, fontSize:'0.72rem', color:c.sub }}>Currently {dark ? 'dark' : 'light'}</p>
-                  </div>
-                  {/* Toggle pill */}
-                  <div style={{ width:44, height:24, borderRadius:12, background:dark?'#16a34a':'#e2e8f0', position:'relative', transition:'background 0.2s', flexShrink:0 }}>
-                    <div style={{ width:18, height:18, borderRadius:'50%', background:'#fff', position:'absolute', top:3, left:dark?23:3, transition:'left 0.2s', boxShadow:'0 1px 4px rgba(0,0,0,0.2)' }} />
-                  </div>
-                </button>
-              </div>
-
-              {/* More section */}
-              <p style={{ ...sectionLabel, marginTop:12 }}>More</p>
-              <div style={cardStyle}>
-                <Accordion IcComp={IcHelp}  label="Help & Support"      dark={dark} c={c}>
-                  {helpFaqs.length === 0 ? (
-                    <p style={{ margin:0 }}>Contact us at <strong>ksrfruitshelp@gmail.com</strong></p>
-                  ) : (
-                    <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-                      {helpFaqs.map(faq => (
-                        <div key={faq.id}>
-                          <p style={{ margin:'0 0 2px', fontWeight:600, color:c.text, fontSize:'0.82rem' }}>{faq.title}</p>
-                          {faq.description && <p style={{ margin:0 }}>{faq.description}</p>}
-                          {faq.contactEmail && <p style={{ margin:'4px 0 0' }}>📧 {faq.contactEmail}</p>}
-                          {faq.contactPhone && <p style={{ margin:'2px 0 0' }}>📞 {faq.contactPhone}</p>}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </Accordion>
-                <Accordion IcComp={IcTerms} label="Terms & Conditions"  dark={dark} c={c}>
-                  <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
-                    <p style={{ margin:0 }}>By using KSR Fruits, you agree to the following:</p>
-                    <p style={{ margin:0 }}>• Orders are subject to product availability and delivery area.</p>
-                    <p style={{ margin:0 }}>• Prices may vary based on market rates, especially for bulk orders.</p>
-                    <p style={{ margin:0 }}>• Bulk orders require advance payment confirmation before processing.</p>
-                    <p style={{ margin:0 }}>• Refunds are processed within 3–5 business days for eligible orders.</p>
-                    <p style={{ margin:0 }}>• We reserve the right to cancel orders due to unforeseen circumstances.</p>
-                    <p style={{ margin:'6px 0 0', fontSize:'0.72rem', color:c.sub }}>Last updated: 2025</p>
-                  </div>
-                </Accordion>
-                <Accordion IcComp={IcAbout} label="About KSR Fruits"    dark={dark} c={c}>
-                  {aboutUs.length === 0 ? (
-                    <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
-                      <p style={{ margin:0 }}>KSR Fruits is your trusted source for fresh fruits and dry fruits delivered right to your doorstep.</p>
-                      <p style={{ margin:'4px 0 0' }}>We source directly from farms to ensure freshness and quality in every order.</p>
-                    </div>
-                  ) : (
-                    <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-                      {aboutUs.map(a => (
-                        <div key={a.id}>
-                          {a.title && <p style={{ margin:'0 0 2px', fontWeight:600, color:c.text, fontSize:'0.82rem' }}>{a.title}</p>}
-                          {a.description && <p style={{ margin:0 }}>{a.description}</p>}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </Accordion>
-              </div>
-
-              {/* Logout */}
-              <div style={{ ...cardStyle, marginTop:12 }}>
-                <MenuRow IcComp={IcLogout} label="Logout" onClick={() => { logout(); navigate('/login'); }} danger c={c} noBorder />
-              </div>
-
-              <p style={{ textAlign:'center', fontSize:'0.68rem', color:c.sub, margin:'20px 0 0' }}>KSR Fruits v1.0 · Made with 🍎</p>
-            </>
-          ) : (
-            /* Edit Profile */
-            loading ? (
-              <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-                {[1,2,3,4].map(i => <div key={i} style={{ height:48, background:c.iconBg, borderRadius:10 }} />)}
+        {/* ── Help tab ── */}
+        {(tab === 'help' || tab === 'about') && (
+          <div>
+            <BackBtn onClick={() => setTab('menu')} />
+            <h2 className="text-lg font-black text-gray-900 dark:text-white mb-4">
+              {tab === 'help' ? 'Help & Support' : 'About Us'}
+            </h2>
+            {(tab === 'help' ? helpData : aboutData).length === 0 ? (
+              <div className="text-center py-14 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700">
+                <div className="text-4xl mb-3">{tab === 'help' ? '🤝' : 'ℹ️'}</div>
+                <p className="text-sm text-gray-400">No content available yet.</p>
               </div>
             ) : (
-              <form onSubmit={handleSave} style={{ display:'flex', flexDirection:'column', gap:12 }}>
-                <div style={cardStyle}>
-                  <div style={{ padding:'12px 16px', borderBottom:`1px solid ${c.border}` }}>
-                    <p style={{ margin:0, ...labelStyle }}>Personal Info</p>
+              <div className="flex flex-col gap-3">
+                {(tab === 'help' ? helpData : aboutData).map((item, i) => (
+                  <div key={item.id || i} className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-100 dark:border-gray-700 shadow-sm">
+                    <h3 className="font-bold text-gray-800 dark:text-gray-100 mb-1.5 text-sm">{item.title}</h3>
+                    {item.description && <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{item.description}</p>}
+                    {item.contactEmail && <p className="text-sm text-green-600 mt-2">📧 {item.contactEmail}</p>}
+                    {item.contactPhone && <p className="text-sm text-green-600">📞 {item.contactPhone}</p>}
+                    {item.additionalNotes && <p className="text-xs text-gray-400 mt-2 italic">{item.additionalNotes}</p>}
                   </div>
-                  <div style={{ padding:'12px 16px', display:'flex', flexDirection:'column', gap:12 }}>
-                    {[{key:'name',label:'Full Name',placeholder:'Your name',type:'text'},{key:'email',label:'Email',placeholder:'you@email.com',type:'email'}].map(f => (
-                      <div key={f.key}>
-                        <label style={labelStyle}>{f.label}</label>
-                        <input type={f.type} value={form[f.key]} onChange={e => setForm({...form,[f.key]:e.target.value})} placeholder={f.placeholder} style={inputStyle} />
-                      </div>
-                    ))}
-                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Edit profile tab ── */}
+        {tab === 'edit' && (
+          <div>
+            <BackBtn onClick={() => setTab('menu')} />
+            <h2 className="text-lg font-black text-gray-900 dark:text-white mb-4">Edit Profile</h2>
+            <form onSubmit={save} className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col gap-4">
+              {[
+                { key: 'name',  label: 'Full Name', placeholder: 'Your name',      type: 'text',  Icon: User },
+                { key: 'email', label: 'Email',     placeholder: 'your@email.com', type: 'email', Icon: Mail },
+              ].map(f => (
+                <div key={f.key} className="flex flex-col gap-1.5">
+                  <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                    <f.Icon className="w-3.5 h-3.5 text-gray-400" /> {f.label}
+                  </label>
+                  <input type={f.type} value={form[f.key]} onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))}
+                    placeholder={f.placeholder} className={inputCls} />
                 </div>
-                <div style={cardStyle}>
-                  <div style={{ padding:'12px 16px', borderBottom:`1px solid ${c.border}` }}>
-                    <p style={{ margin:0, ...labelStyle }}>Delivery Details</p>
-                  </div>
-                  <div style={{ padding:'12px 16px', display:'flex', flexDirection:'column', gap:12 }}>
-                    <div>
-                      <label style={labelStyle}>Delivery Address</label>
-                      <textarea value={form.address} onChange={e => setForm({...form,address:e.target.value})} placeholder="House no, Street, City, State, PIN" rows={3} style={{...inputStyle,resize:'vertical'}} />
-                    </div>
-                    {[{key:'receiverName',label:'Receiver Name',placeholder:'Name of person receiving delivery'},{key:'receiverMobile',label:'Receiver Mobile',placeholder:'10-digit mobile number'}].map(f => (
-                      <div key={f.key}>
-                        <label style={labelStyle}>{f.label}</label>
-                        <input value={form[f.key]} onChange={e => setForm({...form,[f.key]:e.target.value})} placeholder={f.placeholder} style={inputStyle} />
-                      </div>
-                    ))}
-                  </div>
+              ))}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                  <Home className="w-3.5 h-3.5 text-gray-400" /> Default Delivery Address
+                </label>
+                <textarea value={form.address} onChange={e => setForm(p => ({ ...p, address: e.target.value }))}
+                  placeholder="Your full address…" rows={3} className={`${inputCls} resize-none`} />
+              </div>
+              <p className="text-xs text-gray-400 dark:text-gray-500 -mt-1">
+                💡 Receiver name &amp; phone are asked at checkout time.
+              </p>
+              <button type="submit" disabled={saving}
+                className="w-full py-3 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2">
+                {saving ? <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full spin" /> Saving…</> : 'Save Profile'}
+              </button>
+            </form>
+          </div>
+        )}
+
+        {/* ── Main menu ── */}
+        {tab === 'menu' && (
+          <>
+            {/* Profile header */}
+            {loading ? (
+              <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 mb-4 flex items-center gap-4 border border-gray-100 dark:border-gray-700">
+                <Skeleton className="w-16 h-16 rounded-2xl shrink-0" />
+                <div className="flex-1 flex flex-col gap-2">
+                  <Skeleton className="h-5 w-1/2" />
+                  <Skeleton className="h-4 w-2/3" />
                 </div>
-                {error && <p style={{ margin:0, color:'#ef4444', fontSize:'0.82rem', background:dark?'#3b1a1a':'#fef2f2', padding:'10px 14px', borderRadius:10 }}>{error}</p>}
-                <button type="submit" disabled={saving}
-                  style={{ padding:'13px', background:saved?'#15803d':'#16a34a', color:'#fff', border:'none', borderRadius:12, fontSize:'0.92rem', fontWeight:700, cursor:'pointer', opacity:saving?0.7:1, transition:'background 0.2s' }}>
-                  {saving ? 'Saving…' : saved ? '✓ Saved!' : 'Save Changes'}
+              </div>
+            ) : (
+              <div className="bg-gradient-to-r from-green-600 to-green-700 rounded-2xl p-5 mb-4 flex items-center gap-4 shadow-md">
+                <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center shrink-0 border-2 border-white/30">
+                  <span className="text-white font-black text-2xl">{(form.name || user?.email || 'U').charAt(0).toUpperCase()}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-black text-white text-base truncate">{form.name || 'New User'}</p>
+                  <p className="text-green-100 text-sm truncate">{user?.email}</p>
+                  {profile?.profileComplete && (
+                    <span className="inline-flex items-center gap-1 text-xs text-green-100 font-medium mt-0.5">
+                      <CheckCircle className="w-3 h-3" /> Profile complete
+                    </span>
+                  )}
+                </div>
+                <button onClick={() => setTab('edit')}
+                  className="shrink-0 bg-white/20 hover:bg-white/30 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition-colors">
+                  Edit
                 </button>
-              </form>
-            )
-          )}
-        </div>
-      </main>
+              </div>
+            )}
+
+            {/* Orders */}
+            <Section title="Orders">
+              <MenuItem Icon={Package} label="My Orders" to="/orders" />
+            </Section>
+
+            {/* Shopping */}
+            <Section title="Shopping">
+              <MenuItem Icon={Heart} label="Wishlist" to="/wishlist" badge={wishCount} />
+              <MenuItem Icon={MapPin} label="Saved Addresses" onClick={() => setTab('addresses')} />
+            </Section>
+
+            {/* Preferences */}
+            <Section title="Preferences">
+              <MenuItem
+                Icon={dark ? Sun : Moon}
+                label={dark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                onClick={toggle}
+                right={
+                  <button onClick={e => { e.stopPropagation(); toggle(); }}
+                    className={`w-11 h-6 rounded-full transition-colors relative shrink-0 ${dark ? 'bg-green-600' : 'bg-gray-200 dark:bg-gray-600'}`}>
+                    <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${dark ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                  </button>
+                }
+              />
+            </Section>
+
+            {/* Support — only Help & About, no Privacy/Refund */}
+            <Section title="Support">
+              <MenuItem Icon={HelpCircle} label="Help & Support" onClick={openHelp} />
+              <MenuItem Icon={Info}       label="About Us"        onClick={openAbout} />
+              <MenuItem Icon={FileText}   label="Terms & Conditions" onClick={openAbout} />
+            </Section>
+
+            {/* Account */}
+            <Section title="Account">
+              <MenuItem Icon={LogOut} label="Logout" danger onClick={() => { logout(); navigate('/login'); }} />
+            </Section>
+
+            <p className="text-center text-xs text-gray-400 dark:text-gray-600 mt-4 pb-2">KSR Fruits v1.0 · Made with ❤️</p>
+          </>
+        )}
+      </div>
     </div>
   );
 }

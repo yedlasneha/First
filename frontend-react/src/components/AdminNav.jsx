@@ -42,11 +42,7 @@ export default function AdminNav({ activeTab, onTabChange, onCalc }) {
       <nav className={s.nav}>
         {/* Logo */}
         <button className={s.brand} onClick={() => navigate('/admin/dashboard')}>
-          <div className={s.logoMark}>
-            <span className={s.logoK}>K</span>
-            <span className={s.logoS}>S</span>
-            <span className={s.logoR}>R</span>
-          </div>
+          <img src="/logo.png" alt="KSR Fruits" style={{ height: '40px', width: 'auto', objectFit: 'contain', borderRadius: '8px' }} />
           <div className={s.brandText}>
             <span className={s.brandName}>KSR Fruits</span>
             <span className={s.brandSub}>Admin</span>

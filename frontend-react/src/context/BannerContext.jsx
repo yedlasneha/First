@@ -1,49 +1,47 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback } from 'react';
 import { productApi } from '../api/axios';
 
 const BannerContext = createContext(null);
 
+const DEFAULT_BANNERS = [
+  { id: 1, imageUrl: '', title: 'Fresh Fruits Daily', subtitle: 'Farm to doorstep', tag: 'NEW', badges: ['Organic', 'Fresh'] },
+];
+
 export function BannerProvider({ children }) {
-  const [banners, setBanners] = useState([]);
+  const [banners, setBanners] = useState(DEFAULT_BANNERS);
 
   const fetchBanners = useCallback(async () => {
     try {
-      const { data } = await productApi.get('/api/banners/all');
-      setBanners(Array.isArray(data) ? data : []);
-    } catch { setBanners([]); }
+      const r = await productApi.get('/api/banners');
+      if (r.data?.length) setBanners(r.data);
+    } catch {}
   }, []);
 
-  useEffect(() => { fetchBanners(); }, [fetchBanners]);
+  const addBanner = useCallback(async (data) => {
+    const r = await productApi.post('/api/banners', data);
+    setBanners(prev => [...prev, r.data]);
+  }, []);
 
-  const addBanner = async (banner) => {
-    const { data } = await productApi.post('/api/banners', banner);
-    await fetchBanners();
-    return data;
-  };
+  const updateBanner = useCallback(async (id, data) => {
+    const r = await productApi.put(`/api/banners/${id}`, data);
+    setBanners(prev => prev.map(b => b.id === id ? r.data : b));
+  }, []);
 
-  const updateBanner = async (id, banner) => {
-    const { data } = await productApi.put(`/api/banners/${id}`, banner);
-    await fetchBanners();
-    return data;
-  };
-
-  const deleteBanner = async (id) => {
+  const deleteBanner = useCallback(async (id) => {
     await productApi.delete(`/api/banners/${id}`);
-    await fetchBanners();
-  };
+    setBanners(prev => prev.filter(b => b.id !== id));
+  }, []);
 
-  const reorderBanners = async (ordered) => {
-    // Update display order for each banner
-    await Promise.all(ordered.map((b, i) =>
-      productApi.put(`/api/banners/${b.id}`, { ...b, displayOrder: i + 1 })
-    ));
-    await fetchBanners();
-  };
+  const reorderBanners = useCallback((reordered) => {
+    setBanners(reordered);
+  }, []);
 
-  const resetToDefault = () => fetchBanners();
+  const resetToDefault = useCallback(() => {
+    setBanners(DEFAULT_BANNERS);
+  }, []);
 
   return (
-    <BannerContext.Provider value={{ banners, addBanner, updateBanner, deleteBanner, reorderBanners, resetToDefault, refetch: fetchBanners }}>
+    <BannerContext.Provider value={{ banners, fetchBanners, addBanner, updateBanner, deleteBanner, reorderBanners, resetToDefault }}>
       {children}
     </BannerContext.Provider>
   );
@@ -51,6 +49,6 @@ export function BannerProvider({ children }) {
 
 export const useBanners = () => {
   const ctx = useContext(BannerContext);
-  if (!ctx) return { banners: [], addBanner: async () => {}, updateBanner: async () => {}, deleteBanner: async () => {}, reorderBanners: async () => {}, resetToDefault: () => {}, refetch: async () => {} };
+  if (!ctx) throw new Error('useBanners must be used within BannerProvider');
   return ctx;
 };

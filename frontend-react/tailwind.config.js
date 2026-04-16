@@ -48,6 +48,10 @@ export default {
           '60%':  { transform: 'scale(1.15)' },
           '100%': { transform: 'scale(1)' },
         },
+        fadeIn: {
+          from: { opacity: '0' },
+          to:   { opacity: '1' },
+        },
       },
       animation: {
         'slide-right': 'slideRight 0.25s ease',
@@ -55,6 +59,7 @@ export default {
         'pop-in':      'popIn 0.15s ease',
         'toast-in':    'toastIn 0.3s ease',
         'bounce-in':   'bounceIn 0.5s ease',
+        'fade-in':     'fadeIn 0.4s ease',
       },
       fontFamily: {
         sans: ['Inter', 'Segoe UI', 'system-ui', '-apple-system', 'sans-serif'],

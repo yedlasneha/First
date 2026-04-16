@@ -113,10 +113,9 @@ echo    Cart       :  http://localhost:8083
 echo    Order      :  http://localhost:8084
 echo    Database   :  ksrfruits @ localhost:3306
 echo.
-echo    Customer   :  http://localhost:5173/home
+echo    User App   :  http://localhost:5173/home
 echo    Admin      :  http://localhost:5173/admin-login
 echo.
-echo    Login with any email - OTP sent to that email
 echo    Admin email: ksrfruitshelp@gmail.com
 echo  ============================================================
 echo.

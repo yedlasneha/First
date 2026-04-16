@@ -11,10 +11,7 @@ export const USER_TOKEN_KEY  = 'user_token';
 export const USER_DATA_KEY   = 'user_data';
 
 function getToken() {
-  const isAdmin = window.location.pathname.startsWith('/admin');
-  return isAdmin
-    ? localStorage.getItem(ADMIN_TOKEN_KEY)
-    : localStorage.getItem(USER_TOKEN_KEY);
+  return localStorage.getItem(ADMIN_TOKEN_KEY);
 }
 
 export const authApi = axios.create({
@@ -51,16 +48,9 @@ export const orderApi = axios.create({
     (res) => res,
     (err) => {
       if (err.response?.status === 401) {
-        const isAdmin = window.location.pathname.startsWith('/admin');
-        if (isAdmin) {
-          localStorage.removeItem(ADMIN_TOKEN_KEY);
-          localStorage.removeItem(ADMIN_DATA_KEY);
-          window.location.href = '/admin-login';
-        } else {
-          localStorage.removeItem(USER_TOKEN_KEY);
-          localStorage.removeItem(USER_DATA_KEY);
-          window.location.href = '/login';
-        }
+        localStorage.removeItem(ADMIN_TOKEN_KEY);
+        localStorage.removeItem(ADMIN_DATA_KEY);
+        window.location.href = '/admin-login';
       }
       return Promise.reject(err);
     }

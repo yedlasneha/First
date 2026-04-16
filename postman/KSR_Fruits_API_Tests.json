@@ -1,646 +1,991 @@
 {
   "info": {
     "name": "KSR Fruits API Tests",
-    "description": "Comprehensive API testing collection for KSR Fruits application",
+    "description": "Comprehensive API testing collection for KSR Fruits application — covers all 4 microservices with happy path, error, and security tests",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    {
-      "key": "auth_base_url",
-      "value": "http://localhost:8081",
-      "type": "string"
-    },
-    {
-      "key": "product_base_url",
-      "value": "http://localhost:8082",
-      "type": "string"
-    },
-    {
-      "key": "cart_base_url",
-      "value": "http://localhost:8083",
-      "type": "string"
-    },
-    {
-      "key": "order_base_url",
-      "value": "http://localhost:8084",
-      "type": "string"
-    },
-    {
-      "key": "user_token",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "admin_token",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "user_id",
-      "value": "",
-      "type": "string"
-    }
+    { "key": "auth_base_url",    "value": "http://localhost:8081", "type": "string" },
+    { "key": "product_base_url", "value": "http://localhost:8082", "type": "string" },
+    { "key": "cart_base_url",    "value": "http://localhost:8083", "type": "string" },
+    { "key": "order_base_url",   "value": "http://localhost:8084", "type": "string" },
+    { "key": "user_token",       "value": "", "type": "string" },
+    { "key": "admin_token",      "value": "", "type": "string" },
+    { "key": "user_id",          "value": "", "type": "string" },
+    { "key": "product_id",       "value": "1", "type": "string" },
+    { "key": "order_id",         "value": "", "type": "string" },
+    { "key": "bulk_order_id",    "value": "", "type": "string" },
+    { "key": "banner_id",        "value": "", "type": "string" }
   ],
   "item": [
+
     {
       "name": "Authentication",
       "item": [
         {
-          "name": "Customer - Send OTP",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test(\"Response has message\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.message).to.include(\"OTP sent\");",
-                  "});",
-                  "",
-                  "pm.test(\"Phone number returned\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.phone).to.exist;",
-                  "});"
-                ]
-              }
-            }
-          ],
+          "name": "Customer - Send OTP (valid email)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+            "pm.test(\"OTP sent message\", () => {",
+            "  var j = pm.response.json();",
+            "  pm.expect(j.message).to.include(\"OTP\");",
+            "});"
+          ]}}],
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"phone\": \"9876543210\"\n}"
-            },
-            "url": {
-              "raw": "{{auth_base_url}}/api/auth/send-otp",
-              "host": ["{{auth_base_url}}"],
-              "path": ["api", "auth", "send-otp"]
-            }
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"testuser@example.com\"\n}" },
+            "url": { "raw": "{{auth_base_url}}/api/auth/send-otp", "host": ["{{auth_base_url}}"], "path": ["api","auth","send-otp"] }
           }
         },
         {
-          "name": "Customer - Verify OTP",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test(\"Token received\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.token).to.exist;",
-                  "    pm.collectionVariables.set(\"user_token\", jsonData.token);",
-                  "    pm.collectionVariables.set(\"user_id\", jsonData.userId);",
-                  "});",
-                  "",
-                  "pm.test(\"User role is USER\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.role).to.eql(\"USER\");",
-                  "});"
-                ]
-              }
-            }
-          ],
+          "name": "Customer - Send OTP (invalid email format)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 400 for invalid email\", () => pm.response.to.have.status(400));"
+          ]}}],
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"phone\": \"9876543210\",\n  \"otp\": \"123456\"\n}"
-            },
-            "url": {
-              "raw": "{{auth_base_url}}/api/auth/verify-otp",
-              "host": ["{{auth_base_url}}"],
-              "path": ["api", "auth", "verify-otp"]
-            }
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"not-an-email\"\n}" },
+            "url": { "raw": "{{auth_base_url}}/api/auth/send-otp", "host": ["{{auth_base_url}}"], "path": ["api","auth","send-otp"] }
           }
         },
         {
-          "name": "Admin - Send OTP",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test(\"Admin OTP sent\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.message).to.include(\"Admin OTP\");",
-                  "});"
-                ]
-              }
-            }
-          ],
+          "name": "Customer - Send OTP (missing email)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 400 for missing email\", () => pm.response.to.have.status(400));"
+          ]}}],
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"phone\": \"9963983601\"\n}"
-            },
-            "url": {
-              "raw": "{{auth_base_url}}/api/auth/admin/send-otp",
-              "host": ["{{auth_base_url}}"],
-              "path": ["api", "auth", "admin", "send-otp"]
-            }
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": { "raw": "{{auth_base_url}}/api/auth/send-otp", "host": ["{{auth_base_url}}"], "path": ["api","auth","send-otp"] }
           }
         },
         {
-          "name": "Admin - Verify OTP",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test(\"Admin token received\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.token).to.exist;",
-                  "    pm.collectionVariables.set(\"admin_token\", jsonData.token);",
-                  "});",
-                  "",
-                  "pm.test(\"User role is ADMIN\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.role).to.eql(\"ADMIN\");",
-                  "});"
-                ]
-              }
-            }
-          ],
+          "name": "Customer - Verify OTP (valid)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+            "pm.test(\"JWT token returned\", () => {",
+            "  var j = pm.response.json();",
+            "  pm.expect(j.token).to.exist;",
+            "  pm.collectionVariables.set(\"user_token\", j.token);",
+            "  pm.collectionVariables.set(\"user_id\", j.userId);",
+            "});",
+            "pm.test(\"Role is USER\", () => pm.expect(pm.response.json().role).to.eql(\"USER\"));",
+            "pm.test(\"userId present\", () => pm.expect(pm.response.json().userId).to.exist);"
+          ]}}],
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"phone\": \"9963983601\",\n  \"otp\": \"123456\"\n}"
-            },
-            "url": {
-              "raw": "{{auth_base_url}}/api/auth/admin/verify-otp",
-              "host": ["{{auth_base_url}}"],
-              "path": ["api", "auth", "admin", "verify-otp"]
-            }
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"testuser@example.com\",\n  \"otp\": \"{{DEV_OTP}}\"\n}" },
+            "url": { "raw": "{{auth_base_url}}/api/auth/verify-otp", "host": ["{{auth_base_url}}"], "path": ["api","auth","verify-otp"] }
           }
         },
         {
-          "name": "Get Profile",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test(\"Profile data returned\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.userId).to.exist;",
-                  "    pm.expect(jsonData.phone).to.exist;",
-                  "});"
-                ]
-              }
-            }
-          ],
+          "name": "Customer - Verify OTP (wrong OTP)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 400 or 401 for wrong OTP\", () => {",
+            "  pm.expect(pm.response.code).to.be.oneOf([400, 401]);",
+            "});"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"testuser@example.com\",\n  \"otp\": \"000000\"\n}" },
+            "url": { "raw": "{{auth_base_url}}/api/auth/verify-otp", "host": ["{{auth_base_url}}"], "path": ["api","auth","verify-otp"] }
+          }
+        },
+        {
+          "name": "Customer - Validate JWT Token",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200 for valid token\", () => pm.response.to.have.status(200));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{user_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"token\": \"{{user_token}}\"\n}" },
+            "url": { "raw": "{{auth_base_url}}/api/auth/validate", "host": ["{{auth_base_url}}"], "path": ["api","auth","validate"] }
+          }
+        },
+        {
+          "name": "Customer - Validate JWT (invalid token)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 401 for invalid token\", () => pm.response.to.have.status(401));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"token\": \"invalid.token.here\"\n}" },
+            "url": { "raw": "{{auth_base_url}}/api/auth/validate", "host": ["{{auth_base_url}}"], "path": ["api","auth","validate"] }
+          }
+        },
+        {
+          "name": "Admin - Send OTP (valid)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+            "pm.test(\"Admin OTP message\", () => pm.expect(pm.response.json().message).to.exist);"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"ksrfruitshelp@gmail.com\"\n}" },
+            "url": { "raw": "{{auth_base_url}}/api/auth/admin/send-otp", "host": ["{{auth_base_url}}"], "path": ["api","auth","admin","send-otp"] }
+          }
+        },
+        {
+          "name": "Admin - Send OTP (non-admin email)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 403 for non-admin email\", () => pm.response.to.have.status(403));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"hacker@example.com\"\n}" },
+            "url": { "raw": "{{auth_base_url}}/api/auth/admin/send-otp", "host": ["{{auth_base_url}}"], "path": ["api","auth","admin","send-otp"] }
+          }
+        },
+        {
+          "name": "Admin - Verify OTP (valid)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+            "pm.test(\"Admin token received\", () => {",
+            "  var j = pm.response.json();",
+            "  pm.expect(j.token).to.exist;",
+            "  pm.collectionVariables.set(\"admin_token\", j.token);",
+            "});",
+            "pm.test(\"Role is ADMIN\", () => pm.expect(pm.response.json().role).to.eql(\"ADMIN\"));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"ksrfruitshelp@gmail.com\",\n  \"otp\": \"{{ADMIN_DEV_OTP}}\"\n}" },
+            "url": { "raw": "{{auth_base_url}}/api/auth/admin/verify-otp", "host": ["{{auth_base_url}}"], "path": ["api","auth","admin","verify-otp"] }
+          }
+        },
+        {
+          "name": "Get User Profile",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+            "pm.test(\"Profile fields present\", () => {",
+            "  var j = pm.response.json();",
+            "  pm.expect(j.userId).to.exist;",
+            "  pm.expect(j.email).to.exist;",
+            "});"
+          ]}}],
           "request": {
             "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{auth_base_url}}/api/auth/profile/{{user_id}}",
-              "host": ["{{auth_base_url}}"],
-              "path": ["api", "auth", "profile", "{{user_id}}"]
-            }
+            "header": [{ "key": "Authorization", "value": "Bearer {{user_token}}" }],
+            "url": { "raw": "{{auth_base_url}}/api/auth/profile/{{user_id}}", "host": ["{{auth_base_url}}"], "path": ["api","auth","profile","{{user_id}}"] }
           }
         },
         {
-          "name": "Update Profile",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test(\"Profile updated\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.profileComplete).to.be.true;",
-                  "});"
-                ]
-              }
-            }
-          ],
+          "name": "Get Profile (non-existent user)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 404 for unknown user\", () => pm.response.to.have.status(404));"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{user_token}}" }],
+            "url": { "raw": "{{auth_base_url}}/api/auth/profile/999999", "host": ["{{auth_base_url}}"], "path": ["api","auth","profile","999999"] }
+          }
+        },
+        {
+          "name": "Update User Profile",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+            "pm.test(\"Profile updated\", () => {",
+            "  var j = pm.response.json();",
+            "  pm.expect(j.name).to.eql(\"Test User\");",
+            "});"
+          ]}}],
           "request": {
             "method": "PUT",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{user_token}}" }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"address\": \"123 Test Street, Test City\",\n  \"receiverName\": \"Test Receiver\",\n  \"receiverMobile\": \"9999999999\"\n}"
-            },
-            "url": {
-              "raw": "{{auth_base_url}}/api/auth/profile/{{user_id}}",
-              "host": ["{{auth_base_url}}"],
-              "path": ["api", "auth", "profile", "{{user_id}}"]
-            }
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"testuser@example.com\",\n  \"address\": \"123 Test Street, Test City\",\n  \"receiverName\": \"Test Receiver\",\n  \"receiverMobile\": \"9999999999\"\n}" },
+            "url": { "raw": "{{auth_base_url}}/api/auth/profile/{{user_id}}", "host": ["{{auth_base_url}}"], "path": ["api","auth","profile","{{user_id}}"] }
+          }
+        },
+        {
+          "name": "Admin - List All Users",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+            "pm.test(\"Users array returned\", () => pm.expect(pm.response.json()).to.be.an('array'));"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
+            "url": { "raw": "{{auth_base_url}}/api/auth/admin/users", "host": ["{{auth_base_url}}"], "path": ["api","auth","admin","users"] }
+          }
+        },
+        {
+          "name": "Admin - List Users (with user token - should fail)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 403 when user accesses admin endpoint\", () => pm.response.to.have.status(403));"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{user_token}}" }],
+            "url": { "raw": "{{auth_base_url}}/api/auth/admin/users", "host": ["{{auth_base_url}}"], "path": ["api","auth","admin","users"] }
+          }
+        },
+        {
+          "name": "Protected Route - No Token",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 401 without token\", () => pm.response.to.have.status(401));"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{auth_base_url}}/api/auth/admin/users", "host": ["{{auth_base_url}}"], "path": ["api","auth","admin","users"] }
           }
         }
       ]
     },
+
     {
       "name": "Products",
       "item": [
         {
           "name": "Get All Products",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test(\"Products array returned\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData).to.be.an('array');",
-                  "});"
-                ]
-              }
-            }
-          ],
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+            "pm.test(\"Returns array\", () => pm.expect(pm.response.json()).to.be.an('array'));",
+            "pm.test(\"Each product has id, name, price\", () => {",
+            "  var arr = pm.response.json();",
+            "  if (arr.length > 0) {",
+            "    pm.expect(arr[0].id).to.exist;",
+            "    pm.expect(arr[0].name).to.exist;",
+            "    pm.expect(arr[0].price).to.exist;",
+            "    pm.collectionVariables.set(\"product_id\", arr[0].id);",
+            "  }",
+            "});"
+          ]}}],
           "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{product_base_url}}/api/products",
-              "host": ["{{product_base_url}}"],
-              "path": ["api", "products"]
-            }
+            "method": "GET", "header": [],
+            "url": { "raw": "{{product_base_url}}/api/products", "host": ["{{product_base_url}}"], "path": ["api","products"] }
           }
         },
         {
           "name": "Get Product by ID",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test(\"Product details returned\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.id).to.exist;",
-                  "    pm.expect(jsonData.name).to.exist;",
-                  "    pm.expect(jsonData.price).to.exist;",
-                  "});"
-                ]
-              }
-            }
-          ],
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+            "pm.test(\"Product fields present\", () => {",
+            "  var j = pm.response.json();",
+            "  pm.expect(j.id).to.exist;",
+            "  pm.expect(j.name).to.exist;",
+            "  pm.expect(j.price).to.exist;",
+            "});"
+          ]}}],
           "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{product_base_url}}/api/products/1",
-              "host": ["{{product_base_url}}"],
-              "path": ["api", "products", "1"]
-            }
+            "method": "GET", "header": [],
+            "url": { "raw": "{{product_base_url}}/api/products/{{product_id}}", "host": ["{{product_base_url}}"], "path": ["api","products","{{product_id}}"] }
+          }
+        },
+        {
+          "name": "Get Product by ID (not found)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 404 for unknown product\", () => pm.response.to.have.status(404));"
+          ]}}],
+          "request": {
+            "method": "GET", "header": [],
+            "url": { "raw": "{{product_base_url}}/api/products/999999", "host": ["{{product_base_url}}"], "path": ["api","products","999999"] }
           }
         },
         {
           "name": "Search Products",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test(\"Search results returned\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData).to.be.an('array');",
-                  "});"
-                ]
-              }
-            }
-          ],
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+            "pm.test(\"Returns array\", () => pm.expect(pm.response.json()).to.be.an('array'));"
+          ]}}],
           "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{product_base_url}}/api/products/search?q=apple",
-              "host": ["{{product_base_url}}"],
-              "path": ["api", "products", "search"],
-              "query": [
-                {
-                  "key": "q",
-                  "value": "apple"
-                }
-              ]
-            }
+            "method": "GET", "header": [],
+            "url": { "raw": "{{product_base_url}}/api/products?search=apple", "host": ["{{product_base_url}}"], "path": ["api","products"], "query": [{ "key": "search", "value": "apple" }] }
           }
         },
         {
-          "name": "Get Products by Category",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test(\"Category products returned\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData).to.be.an('array');",
-                  "});"
-                ]
-              }
-            }
-          ],
+          "name": "Get Product Variants",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+            "pm.test(\"Returns array\", () => pm.expect(pm.response.json()).to.be.an('array'));"
+          ]}}],
+          "request": {
+            "method": "GET", "header": [],
+            "url": { "raw": "{{product_base_url}}/api/products/{{product_id}}/variants", "host": ["{{product_base_url}}"], "path": ["api","products","{{product_id}}","variants"] }
+          }
+        },
+        {
+          "name": "Admin - Create Product",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200 or 201\", () => pm.expect(pm.response.code).to.be.oneOf([200,201]));",
+            "pm.test(\"Product created with id\", () => {",
+            "  var j = pm.response.json();",
+            "  pm.expect(j.id).to.exist;",
+            "  pm.collectionVariables.set(\"product_id\", j.id);",
+            "});"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Test Mango\",\n  \"description\": \"Fresh Alphonso mangoes\",\n  \"price\": 120.00,\n  \"discountPercent\": 10,\n  \"stockQuantity\": 50,\n  \"category\": \"Fruits\",\n  \"unit\": \"kg\",\n  \"active\": true\n}" },
+            "url": { "raw": "{{product_base_url}}/api/products", "host": ["{{product_base_url}}"], "path": ["api","products"] }
+          }
+        },
+        {
+          "name": "Admin - Update Product",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+            "pm.test(\"Price updated\", () => pm.expect(pm.response.json().price).to.eql(130.00));"
+          ]}}],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Test Mango\",\n  \"price\": 130.00,\n  \"stockQuantity\": 45,\n  \"active\": true\n}" },
+            "url": { "raw": "{{product_base_url}}/api/products/{{product_id}}", "host": ["{{product_base_url}}"], "path": ["api","products","{{product_id}}"] }
+          }
+        },
+        {
+          "name": "Admin - Update Stock",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+          ]}}],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"stockQuantity\": 100\n}" },
+            "url": { "raw": "{{product_base_url}}/api/products/{{product_id}}/stock", "host": ["{{product_base_url}}"], "path": ["api","products","{{product_id}}","stock"] }
+          }
+        },
+        {
+          "name": "Admin - Create Product (no auth - should fail)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 401 without token\", () => pm.response.to.have.status(401));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Hack Product\",\n  \"price\": 1\n}" },
+            "url": { "raw": "{{product_base_url}}/api/products", "host": ["{{product_base_url}}"], "path": ["api","products"] }
+          }
+        },
+        {
+          "name": "Get All Banners (customer)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+            "pm.test(\"Returns array\", () => pm.expect(pm.response.json()).to.be.an('array'));"
+          ]}}],
+          "request": {
+            "method": "GET", "header": [],
+            "url": { "raw": "{{product_base_url}}/api/banners", "host": ["{{product_base_url}}"], "path": ["api","banners"] }
+          }
+        },
+        {
+          "name": "Admin - Get All Banners",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+            "pm.test(\"Returns array\", () => {",
+            "  var arr = pm.response.json();",
+            "  pm.expect(arr).to.be.an('array');",
+            "  if (arr.length > 0) pm.collectionVariables.set(\"banner_id\", arr[0].id);",
+            "});"
+          ]}}],
           "request": {
             "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{product_base_url}}/api/products/category/1",
-              "host": ["{{product_base_url}}"],
-              "path": ["api", "products", "category", "1"]
-            }
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
+            "url": { "raw": "{{product_base_url}}/api/banners/all", "host": ["{{product_base_url}}"], "path": ["api","banners","all"] }
+          }
+        },
+        {
+          "name": "Admin - Create Banner",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200 or 201\", () => pm.expect(pm.response.code).to.be.oneOf([200,201]));",
+            "pm.test(\"Banner id returned\", () => {",
+            "  var j = pm.response.json();",
+            "  pm.expect(j.id).to.exist;",
+            "  pm.collectionVariables.set(\"banner_id\", j.id);",
+            "});"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Summer Sale\",\n  \"subtitle\": \"Up to 30% off\",\n  \"tag\": \"HOT\",\n  \"displayOrder\": 1,\n  \"active\": true\n}" },
+            "url": { "raw": "{{product_base_url}}/api/banners", "host": ["{{product_base_url}}"], "path": ["api","banners"] }
+          }
+        },
+        {
+          "name": "Admin - Update Banner",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+          ]}}],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Monsoon Sale\",\n  \"subtitle\": \"Fresh arrivals\",\n  \"active\": true\n}" },
+            "url": { "raw": "{{product_base_url}}/api/banners/{{banner_id}}", "host": ["{{product_base_url}}"], "path": ["api","banners","{{banner_id}}"] }
+          }
+        },
+        {
+          "name": "Admin - Delete Banner",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200 or 204\", () => pm.expect(pm.response.code).to.be.oneOf([200,204]));"
+          ]}}],
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
+            "url": { "raw": "{{product_base_url}}/api/banners/{{banner_id}}", "host": ["{{product_base_url}}"], "path": ["api","banners","{{banner_id}}"] }
+          }
+        },
+        {
+          "name": "Get Benefits",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+            "pm.test(\"Returns array\", () => pm.expect(pm.response.json()).to.be.an('array'));"
+          ]}}],
+          "request": {
+            "method": "GET", "header": [],
+            "url": { "raw": "{{product_base_url}}/api/benefits", "host": ["{{product_base_url}}"], "path": ["api","benefits"] }
+          }
+        },
+        {
+          "name": "Admin - Create Benefit",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200 or 201\", () => pm.expect(pm.response.code).to.be.oneOf([200,201]));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Rich in Vitamin C\",\n  \"description\": \"Boosts immunity\",\n  \"productId\": {{product_id}}\n}" },
+            "url": { "raw": "{{product_base_url}}/api/benefits", "host": ["{{product_base_url}}"], "path": ["api","benefits"] }
+          }
+        },
+        {
+          "name": "Get Help FAQs",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+            "pm.test(\"Returns array\", () => pm.expect(pm.response.json()).to.be.an('array'));"
+          ]}}],
+          "request": {
+            "method": "GET", "header": [],
+            "url": { "raw": "{{product_base_url}}/api/help", "host": ["{{product_base_url}}"], "path": ["api","help"] }
+          }
+        },
+        {
+          "name": "Admin - Create Help FAQ",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200 or 201\", () => pm.expect(pm.response.code).to.be.oneOf([200,201]));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"question\": \"How do I track my order?\",\n  \"answer\": \"Go to Orders page to track your order status.\"\n}" },
+            "url": { "raw": "{{product_base_url}}/api/help", "host": ["{{product_base_url}}"], "path": ["api","help"] }
+          }
+        },
+        {
+          "name": "Get About Us",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+          ]}}],
+          "request": {
+            "method": "GET", "header": [],
+            "url": { "raw": "{{product_base_url}}/api/about", "host": ["{{product_base_url}}"], "path": ["api","about"] }
+          }
+        },
+        {
+          "name": "Get Payment Settings",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+            "pm.test(\"UPI ID present\", () => pm.expect(pm.response.json().upiId).to.exist);"
+          ]}}],
+          "request": {
+            "method": "GET", "header": [],
+            "url": { "raw": "{{product_base_url}}/api/payment-settings", "host": ["{{product_base_url}}"], "path": ["api","payment-settings"] }
+          }
+        },
+        {
+          "name": "Admin - Save Payment Settings",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"upiId\": \"ksrfruits@upi\",\n  \"bankName\": \"SBI\",\n  \"accountNumber\": \"XXXX1234\",\n  \"ifscCode\": \"SBIN0001234\",\n  \"paymentInstructions\": \"Pay and enter UTR number\"\n}" },
+            "url": { "raw": "{{product_base_url}}/api/payment-settings", "host": ["{{product_base_url}}"], "path": ["api","payment-settings"] }
+          }
+        },
+        {
+          "name": "Get Profit Entries",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+            "pm.test(\"Returns array\", () => pm.expect(pm.response.json()).to.be.an('array'));"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
+            "url": { "raw": "{{product_base_url}}/api/profit", "host": ["{{product_base_url}}"], "path": ["api","profit"] }
+          }
+        },
+        {
+          "name": "Admin - Add Profit Entry",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200 or 201\", () => pm.expect(pm.response.code).to.be.oneOf([200,201]));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"productName\": \"Mango\",\n  \"buyPrice\": 80.00,\n  \"sellPrice\": 120.00,\n  \"quantity\": 10,\n  \"unit\": \"kg\"\n}" },
+            "url": { "raw": "{{product_base_url}}/api/profit", "host": ["{{product_base_url}}"], "path": ["api","profit"] }
+          }
+        },
+        {
+          "name": "Get Today Profit Summary",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
+            "url": { "raw": "{{product_base_url}}/api/profit/today/summary", "host": ["{{product_base_url}}"], "path": ["api","profit","today","summary"] }
+          }
+        },
+        {
+          "name": "Admin - Delete Product",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200 or 204\", () => pm.expect(pm.response.code).to.be.oneOf([200,204]));"
+          ]}}],
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
+            "url": { "raw": "{{product_base_url}}/api/products/{{product_id}}", "host": ["{{product_base_url}}"], "path": ["api","products","{{product_id}}"] }
           }
         }
       ]
     },
+
     {
       "name": "Cart",
       "item": [
         {
           "name": "Add to Cart",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test(\"Item added to cart\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.productId).to.exist;",
-                  "    pm.expect(jsonData.quantity).to.exist;",
-                  "});"
-                ]
-              }
-            }
-          ],
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+            "pm.test(\"Item added\", () => {",
+            "  var j = pm.response.json();",
+            "  pm.expect(j.productId).to.exist;",
+            "  pm.expect(j.quantity).to.exist;",
+            "});"
+          ]}}],
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{user_token}}" }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"productId\": 1,\n  \"quantity\": 2,\n  \"price\": 50.00,\n  \"productName\": \"Apple\"\n}"
-            },
-            "url": {
-              "raw": "{{cart_base_url}}/api/cart/{{user_id}}/add",
-              "host": ["{{cart_base_url}}"],
-              "path": ["api", "cart", "{{user_id}}", "add"]
-            }
+            "body": { "mode": "raw", "raw": "{\n  \"userId\": {{user_id}},\n  \"productId\": {{product_id}},\n  \"productName\": \"Test Product\",\n  \"quantity\": 2,\n  \"price\": 50.00\n}" },
+            "url": { "raw": "{{cart_base_url}}/api/cart/add", "host": ["{{cart_base_url}}"], "path": ["api","cart","add"] }
           }
         },
         {
           "name": "Get Cart",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test(\"Cart items returned\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData).to.be.an('array');",
-                  "});"
-                ]
-              }
-            }
-          ],
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+            "pm.test(\"Returns array\", () => pm.expect(pm.response.json()).to.be.an('array'));"
+          ]}}],
           "request": {
             "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{cart_base_url}}/api/cart/{{user_id}}",
-              "host": ["{{cart_base_url}}"],
-              "path": ["api", "cart", "{{user_id}}"]
-            }
+            "header": [{ "key": "Authorization", "value": "Bearer {{user_token}}" }],
+            "url": { "raw": "{{cart_base_url}}/api/cart/{{user_id}}", "host": ["{{cart_base_url}}"], "path": ["api","cart","{{user_id}}"] }
           }
         },
         {
           "name": "Update Cart Quantity",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});"
-                ]
-              }
-            }
-          ],
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+          ]}}],
           "request": {
             "method": "PUT",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{user_token}}" }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"quantity\": 5\n}"
-            },
-            "url": {
-              "raw": "{{cart_base_url}}/api/cart/{{user_id}}/update/1",
-              "host": ["{{cart_base_url}}"],
-              "path": ["api", "cart", "{{user_id}}", "update", "1"]
-            }
+            "body": { "mode": "raw", "raw": "{\n  \"userId\": {{user_id}},\n  \"productId\": {{product_id}},\n  \"quantity\": 5\n}" },
+            "url": { "raw": "{{cart_base_url}}/api/cart/update", "host": ["{{cart_base_url}}"], "path": ["api","cart","update"] }
+          }
+        },
+        {
+          "name": "Update Cart (invalid quantity)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 400 for invalid quantity\", () => pm.response.to.have.status(400));"
+          ]}}],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{user_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"userId\": {{user_id}},\n  \"productId\": {{product_id}},\n  \"quantity\": -1\n}" },
+            "url": { "raw": "{{cart_base_url}}/api/cart/update", "host": ["{{cart_base_url}}"], "path": ["api","cart","update"] }
           }
         },
         {
           "name": "Remove from Cart",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});"
-                ]
-              }
-            }
-          ],
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200 or 204\", () => pm.expect(pm.response.code).to.be.oneOf([200,204]));"
+          ]}}],
           "request": {
             "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{cart_base_url}}/api/cart/{{user_id}}/remove/1",
-              "host": ["{{cart_base_url}}"],
-              "path": ["api", "cart", "{{user_id}}", "remove", "1"]
-            }
+            "header": [{ "key": "Authorization", "value": "Bearer {{user_token}}" }],
+            "url": { "raw": "{{cart_base_url}}/api/cart/{{user_id}}/{{product_id}}", "host": ["{{cart_base_url}}"], "path": ["api","cart","{{user_id}}","{{product_id}}"] }
           }
         },
         {
           "name": "Clear Cart",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});"
-                ]
-              }
-            }
-          ],
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200 or 204\", () => pm.expect(pm.response.code).to.be.oneOf([200,204]));"
+          ]}}],
           "request": {
             "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{cart_base_url}}/api/cart/{{user_id}}/clear",
-              "host": ["{{cart_base_url}}"],
-              "path": ["api", "cart", "{{user_id}}", "clear"]
-            }
+            "header": [{ "key": "Authorization", "value": "Bearer {{user_token}}" }],
+            "url": { "raw": "{{cart_base_url}}/api/cart/clear/{{user_id}}", "host": ["{{cart_base_url}}"], "path": ["api","cart","clear","{{user_id}}"] }
+          }
+        },
+        {
+          "name": "Get Cart (no auth - should fail)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 401 without token\", () => pm.response.to.have.status(401));"
+          ]}}],
+          "request": {
+            "method": "GET", "header": [],
+            "url": { "raw": "{{cart_base_url}}/api/cart/{{user_id}}", "host": ["{{cart_base_url}}"], "path": ["api","cart","{{user_id}}"] }
           }
         }
       ]
     },
+
     {
       "name": "Orders",
       "item": [
         {
-          "name": "Create Order",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 201\", function () {",
-                  "    pm.response.to.have.status(201);",
-                  "});",
-                  "",
-                  "pm.test(\"Order created\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.id).to.exist;",
-                  "    pm.expect(jsonData.orderNumber).to.exist;",
-                  "});"
-                ]
-              }
-            }
-          ],
+          "name": "Place Order (COD)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200 or 201\", () => pm.expect(pm.response.code).to.be.oneOf([200,201]));",
+            "pm.test(\"Order id returned\", () => {",
+            "  var j = pm.response.json();",
+            "  pm.expect(j.id).to.exist;",
+            "  pm.collectionVariables.set(\"order_id\", j.id);",
+            "});",
+            "pm.test(\"Status is PLACED\", () => pm.expect(pm.response.json().status).to.eql(\"PLACED\"));"
+          ]}}],
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{user_token}}"
-              }
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{user_token}}" }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"userId\": {{user_id}},\n  \"items\": [\n    {\n      \"productId\": 1,\n      \"productName\": \"Apple\",\n      \"quantity\": 2,\n      \"price\": 50.00\n    }\n  ],\n  \"totalAmount\": 100.00,\n  \"deliveryAddress\": \"123 Test Street, Test City\",\n  \"paymentMethod\": \"COD\"\n}"
-            },
-            "url": {
-              "raw": "{{order_base_url}}/api/orders",
-              "host": ["{{order_base_url}}"],
-              "path": ["api", "orders"]
-            }
+            "body": { "mode": "raw", "raw": "{\n  \"userId\": {{user_id}},\n  \"items\": [\n    { \"productId\": {{product_id}}, \"productName\": \"Test Product\", \"quantity\": 2, \"price\": 50.00 }\n  ],\n  \"totalAmount\": 100.00,\n  \"deliveryAddress\": \"123 Test Street, Test City\",\n  \"paymentMethod\": \"COD\"\n}" },
+            "url": { "raw": "{{order_base_url}}/api/orders", "host": ["{{order_base_url}}"], "path": ["api","orders"] }
           }
         },
         {
-          "name": "Get User Orders",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test(\"Orders array returned\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData).to.be.an('array');",
-                  "});"
-                ]
-              }
-            }
-          ],
+          "name": "Place Order (Online - with UTR)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200 or 201\", () => pm.expect(pm.response.code).to.be.oneOf([200,201]));",
+            "pm.test(\"Payment ID stored\", () => pm.expect(pm.response.json().paymentId).to.exist);"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{user_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"userId\": {{user_id}},\n  \"items\": [\n    { \"productId\": {{product_id}}, \"productName\": \"Test Product\", \"quantity\": 1, \"price\": 50.00 }\n  ],\n  \"totalAmount\": 50.00,\n  \"deliveryAddress\": \"123 Test Street, Test City\",\n  \"paymentMethod\": \"ONLINE\",\n  \"paymentId\": \"UTR123456789\"\n}" },
+            "url": { "raw": "{{order_base_url}}/api/orders", "host": ["{{order_base_url}}"], "path": ["api","orders"] }
+          }
+        },
+        {
+          "name": "Place Order (Online - missing UTR)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 400 when UTR missing for online payment\", () => pm.response.to.have.status(400));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{user_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"userId\": {{user_id}},\n  \"items\": [\n    { \"productId\": {{product_id}}, \"productName\": \"Test Product\", \"quantity\": 1, \"price\": 50.00 }\n  ],\n  \"totalAmount\": 50.00,\n  \"deliveryAddress\": \"123 Test Street\",\n  \"paymentMethod\": \"ONLINE\"\n}" },
+            "url": { "raw": "{{order_base_url}}/api/orders", "host": ["{{order_base_url}}"], "path": ["api","orders"] }
+          }
+        },
+        {
+          "name": "Place Order (empty items - should fail)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 400 for empty items\", () => pm.response.to.have.status(400));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{user_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"userId\": {{user_id}},\n  \"items\": [],\n  \"totalAmount\": 0,\n  \"deliveryAddress\": \"123 Test Street\",\n  \"paymentMethod\": \"COD\"\n}" },
+            "url": { "raw": "{{order_base_url}}/api/orders", "host": ["{{order_base_url}}"], "path": ["api","orders"] }
+          }
+        },
+        {
+          "name": "Get My Orders",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+            "pm.test(\"Returns array\", () => pm.expect(pm.response.json()).to.be.an('array'));"
+          ]}}],
           "request": {
             "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{order_base_url}}/api/orders/user/{{user_id}}",
-              "host": ["{{order_base_url}}"],
-              "path": ["api", "orders", "user", "{{user_id}}"]
-            }
+            "header": [{ "key": "Authorization", "value": "Bearer {{user_token}}" }],
+            "url": { "raw": "{{order_base_url}}/api/orders/my?userId={{user_id}}", "host": ["{{order_base_url}}"], "path": ["api","orders","my"], "query": [{ "key": "userId", "value": "{{user_id}}" }] }
+          }
+        },
+        {
+          "name": "Get Single Order",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+            "pm.test(\"Order fields present\", () => {",
+            "  var j = pm.response.json();",
+            "  pm.expect(j.id).to.exist;",
+            "  pm.expect(j.status).to.exist;",
+            "  pm.expect(j.items).to.be.an('array');",
+            "});"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{user_token}}" }],
+            "url": { "raw": "{{order_base_url}}/api/orders/{{order_id}}", "host": ["{{order_base_url}}"], "path": ["api","orders","{{order_id}}"] }
+          }
+        },
+        {
+          "name": "Get Single Order (not found)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 404 for unknown order\", () => pm.response.to.have.status(404));"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{user_token}}" }],
+            "url": { "raw": "{{order_base_url}}/api/orders/999999", "host": ["{{order_base_url}}"], "path": ["api","orders","999999"] }
+          }
+        },
+        {
+          "name": "Admin - Get All Orders",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+            "pm.test(\"Returns array\", () => pm.expect(pm.response.json()).to.be.an('array'));"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
+            "url": { "raw": "{{order_base_url}}/api/admin/orders", "host": ["{{order_base_url}}"], "path": ["api","admin","orders"] }
+          }
+        },
+        {
+          "name": "Admin - Update Order Status (ACCEPTED)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+            "pm.test(\"Status updated to ACCEPTED\", () => pm.expect(pm.response.json().status).to.eql(\"ACCEPTED\"));"
+          ]}}],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"ACCEPTED\"\n}" },
+            "url": { "raw": "{{order_base_url}}/api/admin/orders/{{order_id}}/status", "host": ["{{order_base_url}}"], "path": ["api","admin","orders","{{order_id}}","status"] }
+          }
+        },
+        {
+          "name": "Admin - Update Order Status (OUT_FOR_DELIVERY)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+            "pm.test(\"Status updated\", () => pm.expect(pm.response.json().status).to.eql(\"OUT_FOR_DELIVERY\"));"
+          ]}}],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"OUT_FOR_DELIVERY\"\n}" },
+            "url": { "raw": "{{order_base_url}}/api/admin/orders/{{order_id}}/status", "host": ["{{order_base_url}}"], "path": ["api","admin","orders","{{order_id}}","status"] }
+          }
+        },
+        {
+          "name": "Admin - Update Order Status (DELIVERED)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+            "pm.test(\"Status updated to DELIVERED\", () => pm.expect(pm.response.json().status).to.eql(\"DELIVERED\"));"
+          ]}}],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"DELIVERED\"\n}" },
+            "url": { "raw": "{{order_base_url}}/api/admin/orders/{{order_id}}/status", "host": ["{{order_base_url}}"], "path": ["api","admin","orders","{{order_id}}","status"] }
+          }
+        },
+        {
+          "name": "Admin - Cancel Order",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+            "pm.test(\"Status updated to CANCELLED\", () => pm.expect(pm.response.json().status).to.eql(\"CANCELLED\"));"
+          ]}}],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"CANCELLED\"\n}" },
+            "url": { "raw": "{{order_base_url}}/api/admin/orders/{{order_id}}/status", "host": ["{{order_base_url}}"], "path": ["api","admin","orders","{{order_id}}","status"] }
+          }
+        },
+        {
+          "name": "Admin - Update Order Status (invalid status)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 400 for invalid status value\", () => pm.response.to.have.status(400));"
+          ]}}],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"INVALID_STATUS\"\n}" },
+            "url": { "raw": "{{order_base_url}}/api/admin/orders/{{order_id}}/status", "host": ["{{order_base_url}}"], "path": ["api","admin","orders","{{order_id}}","status"] }
+          }
+        },
+        {
+          "name": "Admin - Get All Orders (with user token - should fail)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 403 when user accesses admin orders\", () => pm.response.to.have.status(403));"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{user_token}}" }],
+            "url": { "raw": "{{order_base_url}}/api/admin/orders", "host": ["{{order_base_url}}"], "path": ["api","admin","orders"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Bulk Orders",
+      "item": [
+        {
+          "name": "Place Bulk Order",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200 or 201\", () => pm.expect(pm.response.code).to.be.oneOf([200,201]));",
+            "pm.test(\"Bulk order id returned\", () => {",
+            "  var j = pm.response.json();",
+            "  pm.expect(j.id).to.exist;",
+            "  pm.collectionVariables.set(\"bulk_order_id\", j.id);",
+            "});"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{user_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"userId\": {{user_id}},\n  \"fruitName\": \"Mango\",\n  \"quantity\": 20,\n  \"unit\": \"kg\",\n  \"deliveryDate\": \"2026-05-01\",\n  \"notes\": \"Alphonso variety preferred\"\n}" },
+            "url": { "raw": "{{order_base_url}}/api/bulk-orders", "host": ["{{order_base_url}}"], "path": ["api","bulk-orders"] }
+          }
+        },
+        {
+          "name": "Place Bulk Order (below minimum quantity)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 400 for quantity below minimum\", () => pm.response.to.have.status(400));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{user_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"userId\": {{user_id}},\n  \"fruitName\": \"Mango\",\n  \"quantity\": 5,\n  \"unit\": \"kg\",\n  \"deliveryDate\": \"2026-05-01\"\n}" },
+            "url": { "raw": "{{order_base_url}}/api/bulk-orders", "host": ["{{order_base_url}}"], "path": ["api","bulk-orders"] }
+          }
+        },
+        {
+          "name": "Get My Bulk Orders",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+            "pm.test(\"Returns array\", () => pm.expect(pm.response.json()).to.be.an('array'));"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{user_token}}" }],
+            "url": { "raw": "{{order_base_url}}/api/bulk-orders/my?userId={{user_id}}", "host": ["{{order_base_url}}"], "path": ["api","bulk-orders","my"], "query": [{ "key": "userId", "value": "{{user_id}}" }] }
+          }
+        },
+        {
+          "name": "Admin - Get All Bulk Orders",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+            "pm.test(\"Returns array\", () => pm.expect(pm.response.json()).to.be.an('array'));"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
+            "url": { "raw": "{{order_base_url}}/api/bulk-orders", "host": ["{{order_base_url}}"], "path": ["api","bulk-orders"] }
+          }
+        },
+        {
+          "name": "Admin - Update Bulk Order Status",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+          ]}}],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"ACCEPTED\"\n}" },
+            "url": { "raw": "{{order_base_url}}/api/bulk-orders/{{bulk_order_id}}/status", "host": ["{{order_base_url}}"], "path": ["api","bulk-orders","{{bulk_order_id}}","status"] }
           }
         }
       ]

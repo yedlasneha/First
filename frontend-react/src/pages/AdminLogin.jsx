@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { authApi } from '../api/axios';
 import styles from './Auth.module.css';
@@ -41,7 +41,7 @@ export default function AdminLogin() {
       const { data } = await authApi.post('/api/auth/admin/send-otp', { email: trimmed });
       if (data.devOtp) {
         setDevOtp(data.devOtp);
-        setOtp(data.devOtp); // auto-fill
+        setOtp(data.devOtp);
       }
       if (!isResend) setStep(2);
       startResendTimer();
@@ -140,8 +140,6 @@ export default function AdminLogin() {
             </div>
           </form>
         )}
-
-        <Link to="/login" className={styles.backLink}>← Back to Customer Login</Link>
       </div>
     </div>
   );

@@ -1,58 +1,43 @@
-import { createContext, useContext, useState, useCallback } from 'react';
-import { authApi, USER_TOKEN_KEY, USER_DATA_KEY, ADMIN_TOKEN_KEY, ADMIN_DATA_KEY } from '../api/axios';
-
-const ADMIN_EMAIL = 'ksrfruitshelp@gmail.com';
+import { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { getUser, getToken, setAuth, clearAuth, authApi } from '../api/services';
 
 const UserAuthContext = createContext(null);
 
-function loadStoredUser() {
-  try {
-    const s = localStorage.getItem(USER_DATA_KEY);
-    return s ? JSON.parse(s) : null;
-  } catch { return null; }
-}
-
 export function UserAuthProvider({ children }) {
-  const [user, setUser] = useState(loadStoredUser);
+  const [user,    setUser]    = useState(getUser);
+  const [loading, setLoading] = useState(false);
+
+  // Validate token on mount
+  useEffect(() => {
+    const token = getToken();
+    if (!token || !user) return;
+    authApi.validate(token)
+      .then(r => { if (!r.data?.valid) { clearAuth(); setUser(null); } })
+      .catch(() => { clearAuth(); setUser(null); });
+  }, []);
 
   const login = useCallback((data) => {
-    if (data.role === 'ADMIN') {
-      // Store in admin slots too so ProtectedRoute works
-      localStorage.setItem(ADMIN_TOKEN_KEY, data.token);
-      localStorage.setItem(ADMIN_DATA_KEY, JSON.stringify(data));
-    }
-    localStorage.setItem(USER_TOKEN_KEY, data.token);
-    localStorage.setItem(USER_DATA_KEY, JSON.stringify(data));
+    setAuth(data);
     setUser(data);
   }, []);
 
   const logout = useCallback(() => {
-    localStorage.removeItem(USER_TOKEN_KEY);
-    localStorage.removeItem(USER_DATA_KEY);
-    localStorage.removeItem(ADMIN_TOKEN_KEY);
-    localStorage.removeItem(ADMIN_DATA_KEY);
+    clearAuth();
     setUser(null);
   }, []);
 
-  // Smart sendOtp: admin email → admin endpoint, everyone else → user endpoint
-  const sendOtp = async (email) => {
-    const isAdmin = email.trim().toLowerCase() === ADMIN_EMAIL;
-    const endpoint = isAdmin ? '/api/auth/admin/send-otp' : '/api/auth/send-otp';
-    const { data } = await authApi.post(endpoint, { email });
-    return data;
-  };
-
-  // Smart verifyOtp: admin email → admin endpoint, everyone else → user endpoint
-  const verifyOtp = async (email, otp) => {
-    const isAdmin = email.trim().toLowerCase() === ADMIN_EMAIL;
-    const endpoint = isAdmin ? '/api/auth/admin/verify-otp' : '/api/auth/verify-otp';
-    const { data } = await authApi.post(endpoint, { email, otp });
-    login(data);
-    return data;
-  };
+  const refreshProfile = useCallback(async () => {
+    if (!user?.userId) return;
+    try {
+      const r = await authApi.getProfile(user.userId);
+      const updated = { ...user, ...r.data };
+      localStorage.setItem('user_data', JSON.stringify(updated));
+      setUser(updated);
+    } catch {}
+  }, [user]);
 
   return (
-    <UserAuthContext.Provider value={{ user, login, logout, sendOtp, verifyOtp }}>
+    <UserAuthContext.Provider value={{ user, loading, setLoading, login, logout, refreshProfile, isLoggedIn: !!user }}>
       {children}
     </UserAuthContext.Provider>
   );
@@ -60,6 +45,6 @@ export function UserAuthProvider({ children }) {
 
 export const useUserAuth = () => {
   const ctx = useContext(UserAuthContext);
-  if (!ctx) return { user: null, login: () => {}, logout: () => {}, sendOtp: async () => ({}), verifyOtp: async () => ({}) };
+  if (!ctx) throw new Error('useUserAuth must be used within UserAuthProvider');
   return ctx;
 };

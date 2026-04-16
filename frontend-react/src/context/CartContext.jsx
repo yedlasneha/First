@@ -1,98 +1,66 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { cartApi } from '../api/axios';
+import { cartApi } from '../api/services';
+import { useUserAuth } from './UserAuthContext';
 
 const CartContext = createContext(null);
 
 export function CartProvider({ children }) {
-  const [cart, setCart] = useState([]);
-  const [syncing, setSyncing] = useState(false);
+  const { user, isLoggedIn } = useUserAuth();
+  const [items,   setItems]   = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  // Get userId from localStorage
-  const getUserId = () => {
+  const fetchCart = useCallback(async () => {
+    if (!isLoggedIn || !user?.userId) return;
+    setLoading(true);
     try {
-      const d = localStorage.getItem('user_data');
-      return d ? JSON.parse(d)?.userId : null;
-    } catch { return null; }
-  };
+      const r = await cartApi.get(user.userId);
+      setItems(r.data || []);
+    } catch { setItems([]); }
+    finally { setLoading(false); }
+  }, [isLoggedIn, user?.userId]);
 
-  // Load cart from backend when user is logged in
-  const loadCart = useCallback(async () => {
-    const userId = getUserId();
-    if (!userId) { setCart([]); return; }
+  useEffect(() => { fetchCart(); }, [fetchCart]);
+
+  const addItem = useCallback(async (product, qty = 1) => {
+    if (!isLoggedIn || !user?.userId) return false;
+    const price = product.discountPercentage > 0
+      ? product.price * (1 - product.discountPercentage / 100)
+      : product.price;
     try {
-      const { data } = await cartApi.get(`/api/cart/${userId}`);
-      // Map backend CartItem to local format
-      setCart(Array.isArray(data) ? data.map(i => ({
-        id: i.productId,
-        cartItemId: i.id,
-        name: i.productName,
-        price: parseFloat(i.price),
-        qty: i.quantity,
-        imageUrl: null, // will be enriched from product list
-      })) : []);
-    } catch { setCart([]); }
-  }, []);
-
-  // Enrich cart items with product imageUrl
-  const enrichCart = useCallback((products) => {
-    setCart(prev => prev.map(item => {
-      const p = products.find(p => p.id === item.id);
-      return p ? { ...item, imageUrl: p.imageUrl, unit: p.unit } : item;
-    }));
-  }, []);
-
-  const addToCart = useCallback(async (product) => {
-    const userId = getUserId();
-    // Optimistic update
-    setCart(prev => {
-      const existing = prev.find(i => i.id === product.id);
-      if (existing) return prev.map(i => i.id === product.id ? { ...i, qty: i.qty + 1 } : i);
-      return [...prev, { id: product.id, name: product.name, price: parseFloat(product.price), qty: 1, imageUrl: product.imageUrl, unit: product.unit }];
-    });
-    if (!userId) return;
-    try {
-      await cartApi.post('/api/cart/add', {
-        userId, productId: product.id, quantity: 1,
-        price: parseFloat(product.price), productName: product.name,
-      });
-    } catch { /* keep optimistic */ }
-  }, []);
+      await cartApi.add(user.userId, product.id, qty, price.toFixed(2), product.name);
+      await fetchCart();
+      return true;
+    } catch { return false; }
+  }, [isLoggedIn, user?.userId, fetchCart]);
 
   const updateQty = useCallback(async (productId, qty) => {
-    const userId = getUserId();
-    if (qty <= 0) {
-      setCart(prev => prev.filter(i => i.id !== productId));
-      if (userId) {
-        try { await cartApi.delete(`/api/cart/${userId}/${productId}`); } catch {}
-      }
-      return;
-    }
-    setCart(prev => prev.map(i => i.id === productId ? { ...i, qty } : i));
-    if (!userId) return;
+    if (!user?.userId) return;
+    if (qty <= 0) { await removeItem(productId); return; }
     try {
-      await cartApi.put('/api/cart/update', { userId, productId, quantity: qty });
+      await cartApi.update(user.userId, productId, qty);
+      setItems(prev => prev.map(i => i.productId === productId ? { ...i, quantity: qty } : i));
     } catch {}
-  }, []);
+  }, [user?.userId]);
 
-  const removeFromCart = useCallback(async (productId) => {
-    const userId = getUserId();
-    setCart(prev => prev.filter(i => i.id !== productId));
-    if (!userId) return;
-    try { await cartApi.delete(`/api/cart/${userId}/${productId}`); } catch {}
-  }, []);
+  const removeItem = useCallback(async (productId) => {
+    if (!user?.userId) return;
+    try {
+      await cartApi.remove(user.userId, productId);
+      setItems(prev => prev.filter(i => i.productId !== productId));
+    } catch {}
+  }, [user?.userId]);
 
   const clearCart = useCallback(async () => {
-    const userId = getUserId();
-    setCart([]);
-    if (!userId) return;
-    try { await cartApi.delete(`/api/cart/clear/${userId}`); } catch {}
-  }, []);
+    if (!user?.userId) return;
+    try { await cartApi.clear(user.userId); setItems([]); } catch {}
+  }, [user?.userId]);
 
-  const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
-  const count = cart.reduce((s, i) => s + i.qty, 0);
+  const total    = items.reduce((s, i) => s + parseFloat(i.price) * i.quantity, 0);
+  const count    = items.reduce((s, i) => s + i.quantity, 0);
+  const getQty   = (productId) => items.find(i => i.productId === productId)?.quantity || 0;
 
   return (
-    <CartContext.Provider value={{ cart, addToCart, updateQty, removeFromCart, clearCart, total, count, loadCart, enrichCart, syncing }}>
+    <CartContext.Provider value={{ items, loading, total, count, fetchCart, addItem, updateQty, removeItem, clearCart, getQty }}>
       {children}
     </CartContext.Provider>
   );
@@ -100,6 +68,6 @@ export function CartProvider({ children }) {
 
 export const useCart = () => {
   const ctx = useContext(CartContext);
-  if (!ctx) return { cart: [], addToCart: () => {}, updateQty: () => {}, removeFromCart: () => {}, clearCart: async () => {}, total: 0, count: 0, loadCart: async () => {}, enrichCart: () => {}, syncing: false };
+  if (!ctx) throw new Error('useCart must be used within CartProvider');
   return ctx;
 };

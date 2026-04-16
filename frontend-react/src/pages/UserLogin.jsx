@@ -1,118 +1,149 @@
-import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useUserAuth } from '../context/UserAuthContext';
-import logo from '../assets/icon.png';
+import { authApi } from '../api/services';
+
+const COOLDOWN = 30;
 
 export default function UserLogin() {
-  const { sendOtp, verifyOtp } = useUserAuth();
-  const navigate = useNavigate();
-  const [step, setStep] = useState(1);
-  const [email, setEmail] = useState('');
-  const [otp, setOtp] = useState('');
-  const [devOtp, setDevOtp] = useState('');
-  const [error, setError] = useState('');
+  const { login, isLoggedIn } = useUserAuth();
+  const navigate  = useNavigate();
+  const location  = useLocation();
+  const from      = location.state?.from?.pathname || '/home';
+
+  const [step,    setStep]    = useState(1);
+  const [email,   setEmail]   = useState('');
+  const [otp,     setOtp]     = useState('');
+  const [devOtp,  setDevOtp]  = useState('');
+  const [error,   setError]   = useState('');
   const [loading, setLoading] = useState(false);
-  const [timer, setTimer] = useState(0);
+  const [timer,   setTimer]   = useState(0);
   const timerRef = useRef(null);
+
+  useEffect(() => { if (isLoggedIn) navigate(from, { replace: true }); }, [isLoggedIn]);
   useEffect(() => () => clearInterval(timerRef.current), []);
 
   const startTimer = () => {
-    setTimer(30);
+    setTimer(COOLDOWN);
     timerRef.current = setInterval(() => setTimer(t => { if (t <= 1) { clearInterval(timerRef.current); return 0; } return t - 1; }), 1000);
   };
 
-  const handleSend = async (e, resend = false) => {
+  const sendOtp = async (e, resend = false) => {
     if (e) e.preventDefault();
     setError('');
-    if (!email.match(/^[\w.+\-]+@[\w\-]+\.[a-z]{2,}$/)) return setError('Enter a valid email address');
+    const trimmed = email.trim().toLowerCase();
+    if (!/^[\w.+\-]+@[\w\-]+\.[a-z]{2,}$/.test(trimmed)) return setError('Enter a valid email address');
     setLoading(true);
     try {
-      const data = await sendOtp(email.trim().toLowerCase());
-      if (data.devOtp) {
-        setDevOtp(data.devOtp);
-        setOtp(data.devOtp); // auto-fill
-      }
+      const { data } = await authApi.sendOtp(trimmed);
+      if (data.devOtp) { setDevOtp(data.devOtp); setOtp(data.devOtp); }
       if (!resend) setStep(2);
       startTimer();
     } catch (err) {
-      setError(err.response?.data?.message || err.response?.data?.error || 'Failed to send OTP');
+      const msg = err.response?.data?.error || err.response?.data?.message;
+      setError(msg || (!err.response ? 'Cannot connect to server.' : 'Failed to send OTP.'));
     } finally { setLoading(false); }
   };
 
-  const handleVerify = async (e) => {
+  const verifyOtp = async (e) => {
     e.preventDefault();
     setError('');
     if (otp.length !== 6) return setError('Enter the 6-digit OTP');
     setLoading(true);
     try {
-      const data = await verifyOtp(email.trim().toLowerCase(), otp);
-      // Admin email → go to admin panel, everyone else → home
+      const { data } = await authApi.verifyOtp(email.trim().toLowerCase(), otp);
+      // If the verified user is ADMIN, redirect to admin panel
       if (data.role === 'ADMIN') {
-        navigate('/admin');
-      } else {
-        navigate('/home');
+        // Store in admin slot so ProtectedRoute recognises it
+        localStorage.setItem('admin_token', data.token);
+        localStorage.setItem('admin_data', JSON.stringify(data));
+        navigate('/admin', { replace: true });
+        return;
       }
+      login(data);
+      navigate(from, { replace: true });
     } catch (err) {
-      setError(err.response?.data?.message || err.response?.data?.error || 'Invalid OTP');
+      const msg = err.response?.data?.error || err.response?.data?.message;
+      setError(msg || 'Invalid OTP. Please try again.');
     } finally { setLoading(false); }
   };
 
   return (
-    <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:'linear-gradient(135deg,#f0fdf4,#dcfce7)', padding:16 }}>
-      <div style={{ background:'#fff', borderRadius:20, padding:'36px 28px', width:'100%', maxWidth:400, boxShadow:'0 20px 60px rgba(0,0,0,0.12)' }}>
-        <div style={{ textAlign:'center', marginBottom:24 }}>
-          <img src={logo} alt="KSR Fruits" style={{ width:56, height:56, borderRadius:14, marginBottom:8 }} />
-          <h1 style={{ margin:0, fontSize:'1.4rem', fontWeight:800 }}>
-            <span style={{ color:'#16a34a' }}>KSR</span>
-            <span style={{ color:'#f97316' }}> Fruits</span>
-          </h1>
-          <p style={{ margin:'4px 0 0', color:'#6b7280', fontSize:'0.82rem' }}>Fresh fruits at your doorstep</p>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-sm">
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 bg-green-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+            <span className="text-white font-black text-2xl">K</span>
+          </div>
+          <h1 className="text-2xl font-black text-gray-900">KSR Fruits</h1>
+          <p className="text-gray-500 text-sm mt-1">Fresh fruits delivered fast 🍎</p>
         </div>
 
-        {step === 1 ? (
-          <form onSubmit={handleSend} style={{ display:'flex', flexDirection:'column', gap:14 }}>
-            <div>
-              <label style={{ fontSize:'0.82rem', fontWeight:600, color:'#374151', display:'block', marginBottom:6 }}>Email Address</label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@gmail.com" required autoFocus
-                style={{ width:'100%', padding:'12px 14px', border:'1.5px solid #e5e7eb', borderRadius:10, fontSize:'0.95rem', outline:'none', boxSizing:'border-box' }} />
-            </div>
-            {error && <p style={{ margin:0, color:'#dc2626', fontSize:'0.82rem', background:'#fef2f2', padding:'8px 12px', borderRadius:8 }}>{error}</p>}
-            <button type="submit" disabled={loading}
-              style={{ padding:'13px', background:'#16a34a', color:'#fff', border:'none', borderRadius:12, fontSize:'0.95rem', fontWeight:700, cursor:'pointer', opacity: loading ? 0.7 : 1 }}>
-              {loading ? 'Sending…' : 'Send OTP'}
-            </button>
-            <p style={{ margin:0, textAlign:'center', fontSize:'0.78rem', color:'#9ca3af' }}>We'll send a 6-digit OTP to your email</p>
-          </form>
-        ) : (
-          <form onSubmit={handleVerify} style={{ display:'flex', flexDirection:'column', gap:14 }}>
-            <div style={{ background:'#f0fdf4', borderRadius:10, padding:'10px 14px', fontSize:'0.82rem', color:'#16a34a', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-              <span>OTP sent to <strong>{email}</strong></span>
-              <button type="button" onClick={() => { setStep(1); setOtp(''); setDevOtp(''); setError(''); }} style={{ background:'none', border:'none', color:'#16a34a', fontWeight:700, cursor:'pointer', fontSize:'0.78rem' }}>Change</button>
-            </div>
-            {devOtp && (
-              <div style={{ background:'#fefce8', border:'1.5px solid #fde047', borderRadius:10, padding:'10px 14px', fontSize:'0.85rem', color:'#854d0e', fontWeight:600, textAlign:'center' }}>
-                🔑 Dev OTP: <span style={{ fontSize:'1.2rem', letterSpacing:4, fontWeight:800 }}>{devOtp}</span>
-                <span style={{ fontSize:'0.72rem', display:'block', fontWeight:400, color:'#a16207', marginTop:2 }}>(auto-filled — click Verify)</span>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          {step === 1 ? (
+            <form onSubmit={sendOtp} className="flex flex-col gap-4">
+              <div>
+                <h2 className="text-lg font-bold text-gray-900 mb-1">Sign in</h2>
+                <p className="text-sm text-gray-500">We'll send an OTP to your email</p>
               </div>
-            )}
-            <div>
-              <label style={{ fontSize:'0.82rem', fontWeight:600, color:'#374151', display:'block', marginBottom:6 }}>Enter 6-digit OTP</label>
-              <input value={otp} onChange={e => setOtp(e.target.value.replace(/\D/g,''))} placeholder="• • • • • •" maxLength={6} required autoFocus inputMode="numeric"
-                style={{ width:'100%', padding:'12px 14px', border:'1.5px solid #e5e7eb', borderRadius:10, fontSize:'1.4rem', letterSpacing:8, textAlign:'center', fontWeight:700, outline:'none', boxSizing:'border-box' }} />
-            </div>
-            {error && <p style={{ margin:0, color:'#dc2626', fontSize:'0.82rem', background:'#fef2f2', padding:'8px 12px', borderRadius:8 }}>{error}</p>}
-            <button type="submit" disabled={loading}
-              style={{ padding:'13px', background:'#16a34a', color:'#fff', border:'none', borderRadius:12, fontSize:'0.95rem', fontWeight:700, cursor:'pointer', opacity: loading ? 0.7 : 1 }}>
-              {loading ? 'Verifying…' : 'Verify & Login'}
-            </button>
-            <div style={{ textAlign:'center', fontSize:'0.82rem' }}>
-              {timer > 0
-                ? <span style={{ color:'#9ca3af' }}>Resend in {timer}s</span>
-                : <button type="button" onClick={e => handleSend(null, true)} disabled={loading} style={{ background:'none', border:'none', color:'#16a34a', fontWeight:600, cursor:'pointer', textDecoration:'underline', fontSize:'0.82rem' }}>Resend OTP</button>
-              }
-            </div>
-          </form>
-        )}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-semibold text-gray-700">Email address</label>
+                <input
+                  type="email" value={email} onChange={e => setEmail(e.target.value)}
+                  placeholder="you@example.com" required autoFocus autoComplete="email"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all"
+                />
+              </div>
+              {error && <p className="text-red-500 text-sm">{error}</p>}
+              <button type="submit" disabled={loading}
+                className="w-full py-3 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2">
+                {loading ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full spin" /> : 'Send OTP'}
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={verifyOtp} className="flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">Enter OTP</h2>
+                  <p className="text-sm text-gray-500 truncate max-w-[200px]">{email}</p>
+                </div>
+                <button type="button" onClick={() => { setStep(1); setOtp(''); setDevOtp(''); setError(''); clearInterval(timerRef.current); setTimer(0); }}
+                  className="text-sm text-green-600 font-semibold hover:underline">Change</button>
+              </div>
+              {devOtp && (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-center">
+                  <p className="text-xs text-amber-700 font-medium mb-1">Dev Mode OTP</p>
+                  <p className="text-2xl font-black text-amber-800 tracking-widest">{devOtp}</p>
+                </div>
+              )}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-semibold text-gray-700">6-digit OTP</label>
+                <input
+                  value={otp} onChange={e => setOtp(e.target.value.replace(/\D/g, ''))}
+                  placeholder="• • • • • •" maxLength={6} required autoFocus inputMode="numeric"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl text-center text-xl font-bold tracking-widest outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all"
+                />
+              </div>
+              {error && <p className="text-red-500 text-sm">{error}</p>}
+              <button type="submit" disabled={loading}
+                className="w-full py-3 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2">
+                {loading ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full spin" /> : 'Verify & Login'}
+              </button>
+              <div className="text-center text-sm">
+                {timer > 0
+                  ? <span className="text-gray-400">Resend in {timer}s</span>
+                  : <button type="button" onClick={() => sendOtp(null, true)} disabled={loading}
+                      className="text-green-600 font-semibold hover:underline">Resend OTP</button>}
+              </div>
+            </form>
+          )}
+        </div>
+
+        <p className="text-center text-xs text-gray-400 mt-4">
+          Admin?{' '}
+          <Link to="/admin-login" className="text-green-600 font-semibold hover:underline">Admin Login</Link>
+        </p>
       </div>
     </div>
   );

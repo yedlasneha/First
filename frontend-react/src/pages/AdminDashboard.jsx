@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { orderApi, authApi } from '../api/axios';
 import ProfitCalculator from './ProfitCalculator';
@@ -18,6 +19,7 @@ const fmt = (d) => d ? new Date(d).toLocaleString('en-IN',{day:'numeric',month:'
 
 export default function AdminDashboard() {
   const { } = useAuth();
+  const navigate = useNavigate();
   const [loading,  setLoading]  = useState(true);
   const [orders,   setOrders]   = useState([]);
   const [users,    setUsers]    = useState([]);

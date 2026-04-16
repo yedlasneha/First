@@ -291,10 +291,29 @@ export default function Admin() {
         body: JSON.stringify({status}),
       });
       if (!res.ok) throw new Error();
-      setOrders(prev=>prev.map(o=>o.id===id?{...o,status}:o));
-      if (status === 'DELIVERED') showToast('✅ Order Delivered Successfully');
-      else if (status === 'CANCELLED') showToast('Order cancelled.','error');
-      else showToast(`Status updated to ${status.replace(/_/g,' ')}`);
+      setOrders(prev => prev.map(o => o.id === id ? {...o, status} : o));
+
+      if (status === 'ACCEPTED') {
+        // Auto-generate invoice when order is accepted
+        const acceptedOrder = orders.find(o => o.id === id);
+        if (acceptedOrder) {
+          const orderWithStatus = { ...acceptedOrder, status: 'ACCEPTED' };
+          const html = buildAdminInvoiceHtml(orderWithStatus);
+          const win = window.open('', '_blank');
+          if (win) {
+            win.document.write(html);
+            win.document.close();
+            setTimeout(() => win.print(), 500);
+          }
+        }
+        showToast('✅ Order Accepted — Invoice generated!');
+      } else if (status === 'DELIVERED') {
+        showToast('✅ Order Delivered Successfully');
+      } else if (status === 'CANCELLED') {
+        showToast('Order cancelled.', 'error');
+      } else {
+        showToast(`Status updated to ${status.replace(/_/g,' ')}`);
+      }
     } catch { showToast('Status update failed.','error'); }
     finally { setUpdatingId(null); }
   };
@@ -328,54 +347,121 @@ export default function Admin() {
         <td>${i + 1}</td>
         <td>${item.productName || `Product #${item.productId}`}</td>
         <td>${item.quantity}</td>
-        <td>₹${item.price}</td>
-        <td>₹${(item.quantity * item.price).toFixed(0)}</td>
+        <td>₹${parseFloat(item.price).toFixed(2)}</td>
+        <td>₹${(item.quantity * parseFloat(item.price)).toFixed(2)}</td>
       </tr>`).join('');
-    const payLabel = (order.paymentId || '').toUpperCase() === 'ONLINE' ? 'Online (UPI/GPay)' : 'Cash on Delivery';
-    const sc2 = sc(order.status);
-    return `<html><head><title>KSR Fruits Invoice #${order.id}</title>
+
+    // Parse delivery address: "Name · Phone | Address"
+    const rawAddr = order.deliveryAddress || '';
+    let receiverName = `User #${order.userId}`;
+    let receiverPhone = '';
+    let deliveryAddr = rawAddr;
+    const pipeIdx = rawAddr.indexOf(' | ');
+    if (pipeIdx > -1) {
+      const before = rawAddr.substring(0, pipeIdx);
+      deliveryAddr = rawAddr.substring(pipeIdx + 3);
+      const dotIdx = before.indexOf(' · ');
+      if (dotIdx > -1) {
+        receiverName  = before.substring(0, dotIdx).replace(/^\[BULK\] /, '');
+        receiverPhone = before.substring(dotIdx + 3);
+      } else {
+        receiverName = before.replace(/^\[BULK\] /, '');
+      }
+    }
+
+    const isBulk   = rawAddr.startsWith('[BULK]');
+    const payLabel = (order.paymentId || '').toUpperCase() === 'COD' ? 'Cash on Delivery' : 'Online (UPI/GPay)';
+    const sc2      = sc(order.status);
+    const invoiceNo = `KSR-${order.id}-${Date.now().toString().slice(-4)}`;
+    const dateStr   = order.createdAt
+      ? new Date(order.createdAt).toLocaleString('en-IN', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })
+      : new Date().toLocaleString('en-IN');
+
+    return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>KSR Fruits Invoice #${order.id}</title>
     <style>
       *{box-sizing:border-box;margin:0;padding:0}
-      body{font-family:Arial,sans-serif;padding:32px;color:#1a1a1a;max-width:680px;margin:0 auto}
-      .header{border-bottom:3px solid #2e7d32;padding-bottom:14px;margin-bottom:16px}
-      .header h1{color:#2e7d32;font-size:22px;margin-bottom:4px}
-      .header p{color:#666;font-size:13px}
-      .meta{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px;background:#f9fbe7;padding:12px;border-radius:8px}
-      .meta p{font-size:13px;color:#444}
-      .meta strong{color:#1a1a1a}
-      table{width:100%;border-collapse:collapse;margin:12px 0}
-      th{background:#2e7d32;color:#fff;padding:9px 12px;text-align:left;font-size:13px}
-      td{padding:8px 12px;font-size:13px;border-bottom:1px solid #f0f0f0}
-      tr:nth-child(even) td{background:#fafafa}
-      .summary{margin-top:12px;border-top:2px dashed #e0e0e0;padding-top:12px}
-      .sum-row{display:flex;justify-content:space-between;padding:4px 0;font-size:13px;color:#555}
-      .sum-row.total{font-size:16px;font-weight:800;color:#1a1a1a;border-top:2px solid #2e7d32;margin-top:8px;padding-top:10px}
-      .status{display:inline-block;padding:3px 12px;border-radius:12px;font-size:12px;font-weight:700}
-      .footer{margin-top:20px;text-align:center;font-size:11px;color:#aaa}
-      @media print{body{padding:16px}}
+      body{font-family:'Courier New',Courier,monospace;padding:20px;color:#111;max-width:320px;margin:0 auto;background:#fff;font-size:12px}
+      .center{text-align:center}
+      .brand{font-size:16px;font-weight:900;letter-spacing:1px;color:#16a34a}
+      .sub{font-size:10px;color:#555;margin-top:2px}
+      .divider{border:none;border-top:1px dashed #999;margin:8px 0}
+      .divider-solid{border:none;border-top:2px solid #111;margin:8px 0}
+      .row{display:flex;justify-content:space-between;margin:3px 0;font-size:11px}
+      .row.bold{font-weight:700;font-size:12px}
+      .row.total{font-weight:900;font-size:14px;border-top:2px solid #111;padding-top:6px;margin-top:4px}
+      .label{color:#555;font-size:10px;text-transform:uppercase;letter-spacing:.05em;margin-top:6px;margin-bottom:2px}
+      .items-header{display:flex;justify-content:space-between;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid #111;padding-bottom:4px;margin-bottom:4px}
+      .item{display:flex;justify-content:space-between;margin:3px 0;font-size:11px}
+      .item-name{flex:1;margin-right:8px}
+      .item-qty{width:30px;text-align:center}
+      .item-price{width:50px;text-align:right}
+      .badge{display:inline-block;padding:1px 8px;border-radius:20px;font-size:10px;font-weight:700;border:1px solid #16a34a;color:#16a34a}
+      .thank{text-align:center;font-size:11px;margin-top:8px;font-style:italic;color:#555}
+      @media print{body{padding:8px}@page{margin:4mm;size:80mm auto}}
     </style></head>
     <body>
-      <div class="header">
-        <h1>KSR Fruits — Admin Invoice</h1>
-        <p>Order #${order.id} &nbsp;·&nbsp; ${order.createdAt ? new Date(order.createdAt).toLocaleString('en-IN', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) : new Date().toLocaleString('en-IN')}</p>
+      <div class="center">
+        <img src="http://localhost:5174/logo.png" alt="KSR Fruits" style="width:80px;height:80px;object-fit:contain;margin-bottom:4px" onerror="this.style.display='none'">
+        <div class="brand">KSR FRUITS</div>
+        <div class="sub">Fresh · Fast · Healthy</div>
+        <div class="sub">Warangal, Telangana</div>
+        <div class="sub">ksrfruitshelp@gmail.com</div>
       </div>
-      <div class="meta">
-        <p><strong>Customer:</strong> User #${order.userId}</p>
-        <p><strong>Order ID:</strong> #${order.id}</p>
-        <p><strong>Address:</strong> ${order.deliveryAddress || 'Home Delivery'}</p>
-        <p><strong>Payment:</strong> ${payLabel}</p>
-        <p><strong>Status:</strong> <span class="status" style="background:${sc2.bg};color:${sc2.color}">${order.status}</span></p>
-        <p><strong>Total:</strong> ₹${order.totalAmount}</p>
+
+      <hr class="divider-solid">
+
+      <div class="center">
+        <div class="badge">INVOICE</div>
       </div>
-      <table>
-        <thead><tr><th>#</th><th>Product</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-      <div class="summary">
-        <div class="sum-row"><span>Delivery</span><span style="color:#2e7d32;font-weight:600">FREE</span></div>
-        <div class="sum-row total"><span>Total Amount</span><span>₹${order.totalAmount}</span></div>
+
+      <div style="margin-top:6px">
+        <div class="row"><span>Invoice No</span><span><strong>${invoiceNo}</strong></span></div>
+        <div class="row"><span>Order ID</span><span><strong>#${order.id}</strong></span></div>
+        <div class="row"><span>Date</span><span>${dateStr}</span></div>
+        <div class="row"><span>Status</span><span><strong>${order.status}</strong></span></div>
+        ${isBulk ? '<div class="row"><span>Type</span><span><strong>BULK ORDER</strong></span></div>' : ''}
       </div>
-      <div class="footer">KSR Fruits Admin Copy — For internal use only.</div>
+
+      <hr class="divider">
+
+      <div class="label">Bill To</div>
+      <div style="font-size:11px">
+        <div><strong>${receiverName}</strong></div>
+        ${receiverPhone ? `<div>${receiverPhone}</div>` : ''}
+        <div style="color:#444;margin-top:2px">${deliveryAddr || 'Home Delivery'}</div>
+      </div>
+
+      <hr class="divider">
+
+      <div class="label">Payment</div>
+      <div class="row"><span>${payLabel}</span>${order.paymentId && order.paymentId !== 'COD' ? `<span>Ref: ${order.paymentId}</span>` : ''}</div>
+
+      <hr class="divider">
+
+      <div class="items-header">
+        <span class="item-name">Item</span>
+        <span class="item-qty">Qty</span>
+        <span class="item-price">Amount</span>
+      </div>
+      ${(order.items || []).map(item => `
+        <div class="item">
+          <span class="item-name">${item.productName || `Product #${item.productId}`}</span>
+          <span class="item-qty">${item.quantity}</span>
+          <span class="item-price">₹${(item.quantity * parseFloat(item.price)).toFixed(0)}</span>
+        </div>
+        <div style="font-size:10px;color:#777;margin-left:0;margin-bottom:2px">@ ₹${parseFloat(item.price).toFixed(0)} each</div>
+      `).join('')}
+
+      <hr class="divider">
+
+      <div class="row"><span>Subtotal</span><span>₹${order.totalAmount}</span></div>
+      <div class="row"><span>Delivery</span><span style="color:#16a34a">FREE</span></div>
+      <div class="row total"><span>TOTAL</span><span>₹${order.totalAmount}</span></div>
+
+      <hr class="divider-solid">
+
+      <div class="thank">Thank you for shopping with KSR Fruits!<br>Stay healthy, eat fresh 🌿</div>
+      <div style="text-align:center;font-size:9px;color:#aaa;margin-top:8px">Printed: ${new Date().toLocaleString('en-IN')}</div>
     </body></html>`;
   }
 
@@ -556,7 +642,7 @@ export default function Admin() {
                       {/* ── Header row ── */}
                       <div className={st.orderTop}>
                         <div className={st.orderTopLeft}>
-                          <span className={st.orderId}>Order #{idx+1}</span>
+                          <span className={st.orderId}>Order #{order.id}</span>
                           <span className={st.orderDate}>{order.createdAt?new Date(order.createdAt).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'—'}</span>
                         </div>
                         <div className={st.orderTopRight}>
@@ -605,7 +691,7 @@ export default function Admin() {
                             <button className={st.cancelOrderBtn}
                               disabled={updatingId===order.id}
                               onClick={async () => {
-                                if (!window.confirm(`Cancel Order #${idx+1}? This cannot be undone.`)) return;
+                                if (!window.confirm(`Cancel Order #${order.id}? This cannot be undone.`)) return;
                                 await updateStatus(order.id,'CANCELLED');
                                 showToast('Order cancelled.','error');
                               }}>

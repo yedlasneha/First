@@ -1,27 +1,23 @@
-/* ── Admin Login page ─────────────────────────────────────────────────── */
 .container {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: #f0fdf4;
   padding: 16px;
-  background: linear-gradient(145deg, #1a237e 0%, #283593 55%, #3949ab 100%);
 }
 
 .adminBg {
-  background: linear-gradient(145deg, #1a237e 0%, #283593 55%, #3949ab 100%);
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
 }
 
 .card {
-  background: #ffffff;
-  border-radius: 24px;
-  padding: 36px 28px 32px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 36px 32px;
   width: 100%;
-  max-width: 420px;
-  box-shadow: 0 24px 64px rgba(0,0,0,0.25), 0 4px 16px rgba(0,0,0,0.1);
-  display: flex;
-  flex-direction: column;
-  gap: 0;
+  max-width: 400px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
 }
 
 .logo {
@@ -34,32 +30,31 @@
   font-size: 1.5rem;
   font-weight: 800;
   text-align: center;
-  color: #1a237e;
+  color: #1a1a1a;
   margin: 0 0 4px;
 }
 
 .tagline {
-  font-size: 0.82rem;
-  color: #6b7280;
   text-align: center;
+  color: #666;
+  font-size: 0.85rem;
   margin: 0 0 24px;
-}
-
-.adminNotice {
-  background: #fff3e0;
-  border: 1px solid #ffcc80;
-  border-radius: 10px;
-  padding: 10px 14px;
-  font-size: 0.82rem;
-  color: #e65100;
-  margin-bottom: 16px;
-  text-align: center;
 }
 
 .form {
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+
+.adminNotice {
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.82rem;
+  color: #92400e;
+  text-align: center;
 }
 
 .field {
@@ -75,134 +70,125 @@
 }
 
 .field input {
-  width: 100%;
-  padding: 13px 16px;
+  padding: 10px 14px;
   border: 1.5px solid #e5e7eb;
-  border-radius: 12px;
+  border-radius: 8px;
   font-size: 0.95rem;
-  font-family: inherit;
-  color: #111827;
-  background: #f9fafb;
   outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color 0.2s;
 }
 
 .field input:focus {
-  border-color: #3949ab;
-  background: #fff;
-  box-shadow: 0 0 0 3px rgba(57,73,171,0.12);
+  border-color: #16a34a;
 }
 
-.field input::placeholder { color: #9ca3af; }
-
-.otpInput {
-  font-size: 1.5rem !important;
-  letter-spacing: 8px;
-  text-align: center;
-  font-weight: 700;
+.error {
+  color: #dc2626;
+  font-size: 0.82rem;
+  margin: 0;
 }
 
 .btn {
-  padding: 14px;
+  padding: 12px;
   border: none;
-  border-radius: 12px;
+  border-radius: 8px;
   font-size: 0.95rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-height: 50px;
+  transition: opacity 0.2s;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .adminBtn {
-  background: linear-gradient(135deg, #1a237e, #3949ab);
+  background: #1e3a5f;
   color: #fff;
 }
 
 .adminBtn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #0d1757, #283593);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(26,35,126,0.35);
+  background: #162d4a;
 }
 
-.adminBtn:disabled { opacity: 0.6; cursor: not-allowed; }
-
 .btnSpinner {
-  width: 18px;
-  height: 18px;
-  border: 2px solid rgba(255,255,255,0.4);
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
   border-top-color: #fff;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
+  display: inline-block;
 }
 
-@keyframes spin { to { transform: rotate(360deg); } }
-
-.error {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 8px;
-  padding: 8px 12px;
-  font-size: 0.82rem;
-  color: #dc2626;
-  margin: 0;
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .otpSentBanner {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  color: #166534;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #e8eaf6;
-  border-radius: 10px;
-  padding: 10px 14px;
-  font-size: 0.82rem;
-  color: #1a237e;
-}
-
-.otpSuccessMsg {
-  font-size: 0.82rem;
-  color: #16a34a;
-  text-align: center;
-  padding: 4px 0;
+  gap: 8px;
 }
 
 .changeBtn {
   background: none;
   border: none;
-  color: #3949ab;
-  font-size: 0.78rem;
-  font-weight: 700;
+  color: #16a34a;
+  font-size: 0.82rem;
+  font-weight: 600;
   cursor: pointer;
-  padding: 2px 6px;
-  border-radius: 6px;
+  text-decoration: underline;
+  padding: 0;
 }
 
-.changeBtn:hover { background: #c5cae9; }
+.otpSuccessMsg {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  color: #166534;
+  text-align: center;
+}
+
+.otpInput {
+  letter-spacing: 6px;
+  font-size: 1.4rem;
+  font-weight: 700;
+  text-align: center;
+}
 
 .resendRow {
   text-align: center;
-  margin-top: 4px;
+  font-size: 0.82rem;
 }
 
 .resendTimer {
-  font-size: 0.78rem;
   color: #9ca3af;
 }
 
 .resendBtn {
   background: none;
   border: none;
-  color: #3949ab;
-  font-size: 0.82rem;
+  color: #16a34a;
   font-weight: 600;
   cursor: pointer;
+  font-size: 0.85rem;
   text-decoration: underline;
 }
-
-.resendBtn:hover { color: #1a237e; }
 
 .backLink {
   display: block;
@@ -213,4 +199,6 @@
   text-decoration: none;
 }
 
-.backLink:hover { color: #374151; }
+.backLink:hover {
+  color: #374151;
+}

@@ -22,7 +22,7 @@ export default function ProtectedRoute({ children }) {
   const hasToken = !!(adminToken || userToken);
 
   if (!hasToken || !isAdmin) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/admin-login" replace />;
   }
 
   return children;

@@ -1,164 +1,161 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import { useUserAuth } from '../context/UserAuthContext';
-import { orderApi } from '../api/axios';
-import logo from '../assets/icon.png';
+import { orderApi } from '../api/services';
+import { OrderCardSkeleton } from '../components/Skeleton';
 
 const STATUS_CONFIG = {
-  PLACED:           { label: 'Order Placed',      color: '#f57f17', bg: '#fff8e1', icon: '🕐' },
-  ACCEPTED:         { label: 'Accepted',           color: '#1565c0', bg: '#e3f2fd', icon: '✅' },
-  OUT_FOR_DELIVERY: { label: 'Out for Delivery',   color: '#6a1b9a', bg: '#f3e5f5', icon: '🚚' },
-  DELIVERED:        { label: 'Delivered',          color: '#2e7d32', bg: '#e8f5e9', icon: '📦' },
-  CANCELLED:        { label: 'Cancelled',          color: '#c62828', bg: '#ffebee', icon: '❌' },
+  PLACED:           { label: 'Order Placed',    color: 'text-orange-700',  bg: 'bg-orange-100',  border: 'border-orange-300',  dot: 'bg-orange-500',  icon: '🕐' },
+  ACCEPTED:         { label: 'Accepted',         color: 'text-blue-700',    bg: 'bg-blue-100',    border: 'border-blue-300',    dot: 'bg-blue-500',    icon: '✅' },
+  OUT_FOR_DELIVERY: { label: 'Out for Delivery', color: 'text-violet-700',  bg: 'bg-violet-100',  border: 'border-violet-300',  dot: 'bg-violet-500',  icon: '🚚' },
+  DELIVERED:        { label: 'Delivered',        color: 'text-emerald-700', bg: 'bg-emerald-100', border: 'border-emerald-300', dot: 'bg-emerald-500', icon: '📦' },
+  CANCELLED:        { label: 'Cancelled',        color: 'text-red-700',     bg: 'bg-red-100',     border: 'border-red-300',     dot: 'bg-red-500',     icon: '✕'  },
 };
 
 const fmt = (d) => d ? new Date(d).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
 
 export default function Orders() {
-  const { user, logout } = useUserAuth();
+  const { user, isLoggedIn } = useUserAuth();
   const navigate = useNavigate();
-  const [orders, setOrders] = useState([]);
+  const [orders,  setOrders]  = useState([]);
   const [loading, setLoading] = useState(true);
-  const [expanded, setExpanded] = useState(null);
+  const [error,   setError]   = useState('');
+  const [filter,  setFilter]  = useState('all');
 
   useEffect(() => {
-    if (!user) { navigate('/login'); return; }
-    orderApi.get(`/api/orders/my?userId=${user.userId}`)
+    if (!isLoggedIn) { navigate('/login'); return; }
+    if (!user?.userId) return;
+    orderApi.getMyOrders(user.userId)
       .then(r => setOrders(r.data || []))
-      .catch(() => setOrders([]))
+      .catch(() => setError('Could not load orders. Please try again.'))
       .finally(() => setLoading(false));
-  }, [user]);
+  }, [user?.userId, isLoggedIn]);
 
-  const sc = (s) => STATUS_CONFIG[s] || { label: s, color: '#555', bg: '#f5f5f5', icon: '📋' };
+  const filtered = filter === 'all' ? orders : orders.filter(o => o.status === filter);
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f8f9fa', fontFamily: "'Inter','Segoe UI',sans-serif" }}>
-      {/* Navbar */}
-      <header style={{ background: '#fff', borderBottom: '1px solid #e5e7eb', position: 'sticky', top: 0, zIndex: 100, boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
-        <div style={{ maxWidth: 800, margin: '0 auto', padding: '0 16px', height: 56, display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button onClick={() => navigate('/home')} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, color: '#374151', fontWeight: 600, fontSize: '0.85rem' }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-            Back
-          </button>
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <img src={logo} alt="KSR" style={{ width: 30, height: 30, borderRadius: 8 }} />
-            <span style={{ fontWeight: 800, fontSize: '1rem' }}>
-              <span style={{ color: '#16a34a' }}>My</span>
-              <span style={{ color: '#f97316' }}> Orders</span>
-            </span>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-20 lg:pb-6">
 
-      <main style={{ maxWidth: 800, margin: '0 auto', padding: '20px 16px 80px' }}>
-        {loading ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {[1, 2, 3].map(i => (
-              <div key={i} style={{ background: '#fff', borderRadius: 14, padding: 16, border: '1px solid #f3f4f6' }}>
-                <div style={{ height: 14, background: '#f3f4f6', borderRadius: 6, width: '40%', marginBottom: 10 }} />
-                <div style={{ height: 10, background: '#f3f4f6', borderRadius: 6, width: '70%' }} />
-              </div>
+      {/* ── Sticky header ── */}
+      <div className="sticky top-0 z-30 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 shadow-sm">
+        <div className="flex items-center gap-3 px-3 sm:px-4 h-14">
+          <button onClick={() => navigate(-1)}
+            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors shrink-0">
+            <ArrowLeft className="w-5 h-5 text-gray-700 dark:text-gray-200" />
+          </button>
+          <h1 className="text-base font-black text-gray-900 dark:text-white flex-1">My Orders</h1>
+          {!loading && (
+            <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0">{orders.length} orders</span>
+          )}
+        </div>
+
+        {/* Filter chips — sticky below title, wrap on 2 rows for mobile */}
+        <div className="px-3 sm:px-4 pb-2.5">
+          <div className="flex flex-wrap gap-2">
+            {[
+              { key: 'all',              label: 'All' },
+              { key: 'PLACED',           label: 'Placed' },
+              { key: 'ACCEPTED',         label: 'Accepted' },
+              { key: 'OUT_FOR_DELIVERY', label: 'Out for Delivery' },
+              { key: 'DELIVERED',        label: 'Delivered' },
+              { key: 'CANCELLED',        label: 'Cancelled' },
+            ].map(f => (
+              <button key={f.key} onClick={() => setFilter(f.key)}
+                className={`px-3 py-1.5 rounded-full text-xs font-bold border-2 transition-all ${
+                  filter === f.key
+                    ? 'bg-green-600 text-white border-green-600 shadow-sm'
+                    : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-green-400 hover:text-green-600'
+                }`}>
+                {f.label}
+              </button>
             ))}
           </div>
-        ) : orders.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-            <div style={{ fontSize: '3.5rem', marginBottom: 16 }}>📦</div>
-            <p style={{ fontWeight: 700, color: '#374151', fontSize: '1.1rem', marginBottom: 8 }}>No orders yet</p>
-            <p style={{ color: '#9ca3af', marginBottom: 24 }}>Start shopping to see your orders here</p>
-            <button onClick={() => navigate('/home')}
-              style={{ padding: '12px 28px', background: '#16a34a', color: '#fff', border: 'none', borderRadius: 12, fontWeight: 700, cursor: 'pointer' }}>
+        </div>
+      </div>
+
+      {/* ── Content ── */}
+      <div className="w-full px-3 sm:px-4 lg:px-6 py-4">
+        {loading ? (
+          <div className="flex flex-col gap-3">
+            {[...Array(3)].map((_, i) => <OrderCardSkeleton key={i} />)}
+          </div>
+        ) : error ? (
+          <div className="text-center py-12">
+            <p className="text-red-500 text-sm mb-3">{error}</p>
+            <button onClick={() => window.location.reload()}
+              className="text-green-600 font-semibold text-sm hover:underline">Retry</button>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-16">
+            <div className="text-5xl mb-4">📦</div>
+            <h3 className="text-lg font-bold text-gray-700 dark:text-gray-300 mb-2">
+              {filter === 'all' ? 'No orders yet' : `No ${STATUS_CONFIG[filter]?.label} orders`}
+            </h3>
+            <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">Start shopping to see your orders here</p>
+            <button onClick={() => navigate('/products')}
+              className="px-6 py-3 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition-all">
               Shop Now
             </button>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {[...orders].reverse().map((order, idx) => {
-              const cfg = sc(order.status);
-              const isOpen = expanded === order.id;
+          <div className="flex flex-col gap-3">
+            {[...filtered].reverse().map((order) => {
+              const sc = STATUS_CONFIG[order.status] || STATUS_CONFIG.PLACED;
+              const isCOD = (order.paymentId || '').toUpperCase() === 'COD';
               return (
-                <div key={order.id} style={{ background: '#fff', borderRadius: 14, border: '1px solid #f3f4f6', overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+                <div key={order.id} className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
+                  {/* Colored top accent bar */}
+                  <div className={`h-1 w-full ${sc.dot}`} />
+
                   {/* Header */}
-                  <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}
-                    onClick={() => setExpanded(isOpen ? null : order.id)}>
-                    <div style={{ width: 40, height: 40, borderRadius: 10, background: cfg.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', flexShrink: 0 }}>
-                      {cfg.icon}
+                  <div className="flex items-center justify-between px-4 py-3">
+                    <div>
+                      <span className="font-black text-gray-900 dark:text-white text-sm">Order #{order.id}</span>
+                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{fmt(order.createdAt)}</p>
                     </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                        <span style={{ fontWeight: 700, fontSize: '0.9rem', color: '#111827' }}>Order #{orders.length - idx}</span>
-                        <span style={{ padding: '2px 10px', borderRadius: 20, background: cfg.bg, color: cfg.color, fontSize: '0.72rem', fontWeight: 700 }}>{cfg.label}</span>
-                      </div>
-                      <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: 2 }}>{fmt(order.createdAt)}</div>
-                    </div>
-                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                      <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#111827' }}>₹{order.totalAmount}</div>
-                      <div style={{ fontSize: '0.72rem', color: '#9ca3af' }}>{(order.items || []).length} item{(order.items || []).length !== 1 ? 's' : ''}</div>
-                    </div>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-                      style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }}>
-                      <polyline points="6 9 12 15 18 9"/>
-                    </svg>
+                    <span className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${sc.color} ${sc.bg} ${sc.border}`}>
+                      <span>{sc.icon}</span>
+                      {sc.label}
+                    </span>
                   </div>
 
-                  {/* Expanded details */}
-                  {isOpen && (
-                    <div style={{ borderTop: '1px solid #f3f4f6', padding: '14px 16px' }}>
-                      {/* Progress bar */}
-                      {order.status !== 'CANCELLED' && (
-                        <div style={{ marginBottom: 16 }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                            {['PLACED', 'ACCEPTED', 'OUT_FOR_DELIVERY', 'DELIVERED'].map((s, i) => {
-                              const steps = ['PLACED', 'ACCEPTED', 'OUT_FOR_DELIVERY', 'DELIVERED'];
-                              const currentStep = steps.indexOf(order.status);
-                              const done = i <= currentStep;
-                              const c = sc(s);
-                              return (
-                                <div key={s} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flex: 1 }}>
-                                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: done ? c.bg : '#f3f4f6', border: `2px solid ${done ? c.color : '#e5e7eb'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem' }}>
-                                    {done ? c.icon : '○'}
-                                  </div>
-                                  <span style={{ fontSize: '0.6rem', color: done ? c.color : '#9ca3af', fontWeight: 600, textAlign: 'center', lineHeight: 1.2 }}>{c.label}</span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Items */}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
-                        {(order.items || []).map((item, i) => (
-                          <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: '#f9fafb', borderRadius: 10 }}>
-                            <div>
-                              <span style={{ fontWeight: 600, fontSize: '0.85rem', color: '#111827' }}>{item.productName || `Product #${item.productId}`}</span>
-                              <span style={{ fontSize: '0.75rem', color: '#9ca3af', marginLeft: 8 }}>× {item.quantity}</span>
-                            </div>
-                            <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#111827' }}>₹{(item.price * item.quantity).toFixed(0)}</span>
-                          </div>
-                        ))}
+                  {/* Items */}
+                  <div className="px-4 pb-3 border-t border-gray-50 dark:border-gray-700/50 pt-2">
+                    {(order.items || []).slice(0, 3).map((item, i) => (
+                      <div key={i} className="flex justify-between text-sm py-0.5">
+                        <span className="text-gray-600 dark:text-gray-400 truncate flex-1 mr-2">
+                          <span className="text-green-600 font-semibold">{item.productName}</span>
+                          <span className="text-gray-400"> × {item.quantity}</span>
+                        </span>
+                        <span className="font-semibold text-gray-800 dark:text-gray-200 shrink-0">₹{(parseFloat(item.price) * item.quantity).toFixed(0)}</span>
                       </div>
+                    ))}
+                    {(order.items || []).length > 3 && (
+                      <p className="text-xs text-gray-400 mt-1">+{order.items.length - 3} more items</p>
+                    )}
+                  </div>
 
-                      {/* Summary */}
-                      <div style={{ borderTop: '1px dashed #e5e7eb', paddingTop: 10, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: '#6b7280' }}>
-                          <span>Delivery</span><span style={{ color: '#16a34a', fontWeight: 600 }}>FREE</span>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', fontWeight: 800, color: '#111827' }}>
-                          <span>Total</span><span>₹{order.totalAmount}</span>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#6b7280', marginTop: 4 }}>
-                          <span>📍 {order.deliveryAddress || 'Home Delivery'}</span>
-                          <span>💳 {order.paymentId === 'COD' ? 'Cash on Delivery' : 'Online'}</span>
-                        </div>
-                      </div>
+                  {/* Footer */}
+                  <div className="flex items-center justify-between px-4 py-2.5 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-gray-700/30 dark:to-gray-700/20 border-t border-green-100 dark:border-gray-700">
+                    <div className="flex items-center gap-3">
+                      <span className="font-black text-green-700 dark:text-green-400 text-base">₹{order.totalAmount}</span>
+                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${isCOD ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>
+                        {isCOD ? '💵 COD' : '📱 Online'}
+                      </span>
                     </div>
-                  )}
+                    {order.deliveryAddress && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400 max-w-[160px] text-right truncate">
+                        📍 {order.deliveryAddress.split('|').pop()?.trim() || order.deliveryAddress}
+                      </p>
+                    )}
+                  </div>
                 </div>
               );
             })}
           </div>
         )}
-      </main>
+      </div>
     </div>
   );
 }

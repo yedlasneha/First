@@ -9,6 +9,24 @@
 @tailwind utilities;
 
 :root {
+  /* Brand palette */
+  --brand-primary:   #0ea855;   /* vibrant green */
+  --brand-dark:      #047a3c;
+  --brand-light:     #d1fae5;
+  --brand-orange:    #f97316;   /* accent orange */
+  --brand-orange-lt: #fff7ed;
+
+  /* Page backgrounds */
+  --bg-page:    #f0fdf4;        /* very light green tint */
+  --bg-card:    #ffffff;
+  --bg-card2:   #f8fafc;
+  --text-main:  #0f172a;
+  --text-sub:   #475569;
+  --text-muted: #94a3b8;
+  --border:     #e2e8f0;
+  --nav-bg:     rgba(255,255,255,0.97);
+  --input-bg:   #f8fafc;
+
   --green-50:  #f0fdf4;
   --green-100: #dcfce7;
   --green-200: #bbf7d0;
@@ -17,34 +35,19 @@
   --green-600: #16a34a;
   --green-700: #15803d;
   --green-800: #166534;
-  --gray-50:   #f9fafb;
-  --gray-100:  #f3f4f6;
-  --gray-200:  #e5e7eb;
-  --gray-400:  #9ca3af;
-  --gray-600:  #4b5563;
-  --gray-900:  #111827;
+  --gray-50:   #f8fafc;
+  --gray-100:  #f1f5f9;
+  --gray-200:  #e2e8f0;
+  --gray-400:  #94a3b8;
+  --gray-600:  #475569;
+  --gray-900:  #0f172a;
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-xl: 20px;
-  --shadow-sm: 0 1px 3px rgba(0,0,0,.08);
-  --shadow-md: 0 4px 12px rgba(0,0,0,.10);
-  --shadow-lg: 0 8px 24px rgba(0,0,0,.12);
-}
-
-html { scroll-behavior: smooth; }
-
-/* ── CSS variables for theming ── */
-:root {
-  --bg-page:    #f9fafb;
-  --bg-card:    #ffffff;
-  --bg-card2:   #f3f4f6;
-  --text-main:  #111827;
-  --text-sub:   #6b7280;
-  --text-muted: #9ca3af;
-  --border:     #e5e7eb;
-  --nav-bg:     rgba(255,255,255,0.95);
-  --input-bg:   #f9fafb;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.06);
+  --shadow-md: 0 4px 16px rgba(14,168,85,.12);
+  --shadow-lg: 0 8px 32px rgba(14,168,85,.15);
 }
 
 html.dark {
@@ -101,7 +104,6 @@ body {
   font-size: 12px;
   overflow-x: hidden;
 }
-
 @media (min-width: 480px)  { body { font-size: 13px; } }
 @media (min-width: 640px)  { body { font-size: 14px; } }
 @media (min-width: 1024px) { body { font-size: 16px; } }
