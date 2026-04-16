@@ -1,0 +1,111 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: ksr-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-ksrfruits123}
+      MYSQL_DATABASE: ksrfruits
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api-gateway:
+    image: nginx:alpine
+    container_name: ksr-api-gateway
+    restart: always
+    ports:
+      - "8080:80"
+      - "443:443"
+    volumes:
+      - ./api-gateway.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - auth-service
+      - product-service
+      - cart-service
+      - order-service
+
+  auth-service:
+    build:
+      context: ./backend
+      dockerfile: auth-service/Dockerfile
+    container_name: ksr-auth
+    restart: always
+    ports:
+      - "8081:8081"
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/ksrfruits?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8
+      DB_USERNAME: root
+      DB_PASSWORD: ${MYSQL_ROOT_PASSWORD:-ksrfruits123}
+      JWT_SECRET: ${JWT_SECRET:-KsrFruitsSecretKeyForJWTTokenGenerationAndValidation2024ThisIsAVeryLongSecretKeyForHS512Algorithm}
+      MAIL_USERNAME: ${MAIL_USERNAME:-ksrfruitshelp@gmail.com}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      OTP_MOCK: ${OTP_MOCK:-false}
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  product-service:
+    build:
+      context: ./backend
+      dockerfile: product-service/Dockerfile
+    container_name: ksr-product
+    restart: always
+    ports:
+      - "8082:8082"
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/ksrfruits?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8
+      DB_USERNAME: root
+      DB_PASSWORD: ${MYSQL_ROOT_PASSWORD:-ksrfruits123}
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  cart-service:
+    build:
+      context: ./backend
+      dockerfile: cart-service/Dockerfile
+    container_name: ksr-cart
+    restart: always
+    ports:
+      - "8083:8083"
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/ksrfruits?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8
+      DB_USERNAME: root
+      DB_PASSWORD: ${MYSQL_ROOT_PASSWORD:-ksrfruits123}
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  order-service:
+    build:
+      context: ./backend
+      dockerfile: order-service/Dockerfile
+    container_name: ksr-order
+    restart: always
+    ports:
+      - "8084:8084"
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/ksrfruits?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8
+      DB_USERNAME: root
+      DB_PASSWORD: ${MYSQL_ROOT_PASSWORD:-ksrfruits123}
+      JWT_SECRET: ${JWT_SECRET:-KsrFruitsSecretKeyForJWTTokenGenerationAndValidation2024ThisIsAVeryLongSecretKeyForHS512Algorithm}
+      AUTH_SERVICE_URL: http://auth-service:8081
+    depends_on:
+      mysql:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+
+volumes:
+  mysql_data:

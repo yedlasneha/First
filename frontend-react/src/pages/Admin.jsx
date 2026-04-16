@@ -7,12 +7,12 @@ import AdminNav from '../components/AdminNav';
 import st from './Admin.module.css';
 import { getToken } from '../api/tokenHelper';
 
-const PRODUCT_API  = 'http://localhost:8082/api/products';
-const BENEFIT_API  = 'http://localhost:8082/api/benefits';
-const ORDER_API    = 'http://localhost:8084/api/admin/orders';
-const HELP_API     = 'http://localhost:8082/api/help';
-const ABOUT_API    = 'http://localhost:8082/api/about';
-const VARIANT_API  = (pid) => `http://localhost:8082/api/products/${pid}/variants`;
+const PRODUCT_API  = `${import.meta.env.VITE_PRODUCT_URL || 'http://localhost:8082'}/products`;
+const BENEFIT_API  = `${import.meta.env.VITE_PRODUCT_URL || 'http://localhost:8082'}/benefits`;
+const ORDER_API    = `${import.meta.env.VITE_ORDER_URL   || 'http://localhost:8084'}/admin/orders`;
+const HELP_API     = `${import.meta.env.VITE_PRODUCT_URL || 'http://localhost:8082'}/help`;
+const ABOUT_API    = `${import.meta.env.VITE_PRODUCT_URL || 'http://localhost:8082'}/about`;
+const VARIANT_API  = (pid) => `${import.meta.env.VITE_PRODUCT_URL || 'http://localhost:8082'}/products/${pid}/variants`;
 
 const EMPTY_VARIANT = { size:'', price:'', discountPercentage:0, quantity:0 };
 
@@ -401,7 +401,7 @@ export default function Admin() {
     </style></head>
     <body>
       <div class="center">
-        <img src="http://localhost:5174/logo.png" alt="KSR Fruits" style="width:80px;height:80px;object-fit:contain;margin-bottom:4px" onerror="this.style.display='none'">
+        <img src="/logo.png" alt="KSR Fruits" style="width:80px;height:80px;object-fit:contain;margin-bottom:4px" onerror="this.style.display='none'">
         <div class="brand">KSR FRUITS</div>
         <div class="sub">Fresh · Fast · Healthy</div>
         <div class="sub">Warangal, Telangana</div>
@@ -469,7 +469,7 @@ export default function Admin() {
     setBulkLoad(true);
     try {
       const token = getToken();
-      const res = await fetch('http://localhost:8084/api/bulk-orders', {
+      const res = await fetch(`${import.meta.env.VITE_ORDER_URL || 'http://localhost:8084'}/bulk-orders`, {
         headers: { ...(token ? { Authorization:`Bearer ${token}` } : {}) }
       });
       if (res.ok) { setBulkOrders(await res.json()); }
@@ -570,7 +570,7 @@ export default function Admin() {
   // ── Payment Settings ───────────────────────────────────────────────────
   const fetchPaymentSettings = async () => {
     try {
-      const r = await fetch('http://localhost:8082/api/payment-settings');
+      const r = await fetch(`${import.meta.env.VITE_PRODUCT_URL || 'http://localhost:8082'}/payment-settings`);
       if (r.ok) { const d = await r.json(); setPayForm({ upiId:d.upiId||'', upiName:d.upiName||'', qrImage:d.qrImage||'', bankName:d.bankName||'', accountHolder:d.accountHolder||'', accountNumber:d.accountNumber||'', ifscCode:d.ifscCode||'', branch:d.branch||'', instructions:d.instructions||'' }); }
     } catch {}
   };
@@ -579,7 +579,7 @@ export default function Admin() {
     e.preventDefault(); setPayLoad(true);
     try {
       const token = getToken();
-      const r = await fetch('http://localhost:8082/api/payment-settings', {
+      const r = await fetch(`${import.meta.env.VITE_PRODUCT_URL || 'http://localhost:8082'}/payment-settings`, {
         method: 'POST',
         headers: { 'Content-Type':'application/json', ...(token?{Authorization:`Bearer ${token}`}:{}) },
         body: JSON.stringify(payForm),
