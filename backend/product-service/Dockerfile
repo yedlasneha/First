@@ -1,11 +1,10 @@
 FROM maven:3.9.6-eclipse-temurin-17 AS build
 WORKDIR /app
+COPY pom.xml /app/pom.xml
 COPY common /app/common
 COPY product-service /app/product-service
-WORKDIR /app/common
-RUN mvn clean install -DskipTests
-WORKDIR /app/product-service
-RUN mvn clean package -DskipTests
+RUN mvn clean install -DskipTests -pl common -am
+RUN mvn clean package -DskipTests -pl product-service -am
 
 FROM eclipse-temurin:17-jre
 WORKDIR /app
