@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8080';
+const BASE = import.meta.env.VITE_API_BASE ?? '';
 
 export const ADMIN_TOKEN_KEY = 'admin_token';
 export const ADMIN_DATA_KEY  = 'admin_data';

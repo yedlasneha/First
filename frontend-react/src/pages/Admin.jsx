@@ -7,7 +7,7 @@ import AdminNav from '../components/AdminNav';
 import st from './Admin.module.css';
 import { getToken } from '../api/tokenHelper';
 
-const BASE         = import.meta.env.VITE_API_BASE || 'http://localhost:8080';
+const BASE         = import.meta.env.VITE_API_BASE ?? '';
 const PRODUCT_API  = `${BASE}/api/products`;
 const BENEFIT_API  = `${BASE}/api/benefits`;
 const ORDER_API    = `${BASE}/api/admin/orders`;

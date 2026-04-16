@@ -25,10 +25,8 @@ services:
     restart: always
     ports:
       - "8080:80"
-      - "443:443"
     volumes:
       - ./api-gateway.conf:/etc/nginx/nginx.conf
-      - ./ssl:/etc/nginx/ssl:ro
     depends_on:
       - auth-service
       - product-service

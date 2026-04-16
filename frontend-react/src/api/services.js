@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8080';
+// Empty string = same origin (Vercel proxies /api/* to EC2)
+// In local dev, set VITE_API_BASE=http://localhost:8080 in .env.local
+const BASE = import.meta.env.VITE_API_BASE ?? '';
 
 const TOKEN_KEY = 'user_token';
 const USER_KEY  = 'user_data';
