@@ -1,6 +1,0 @@
-C:\Users\SNEHA Y\KSRFruitsAPP\First\backend\cart-service\src\main\java\com\sneha\KSR_Fruits\cart\CartServiceApplication.java
-C:\Users\SNEHA Y\KSRFruitsAPP\First\backend\cart-service\src\main\java\com\sneha\KSR_Fruits\cart\application\service\CartService.java
-C:\Users\SNEHA Y\KSRFruitsAPP\First\backend\cart-service\src\main\java\com\sneha\KSR_Fruits\cart\domain\model\CartItem.java
-C:\Users\SNEHA Y\KSRFruitsAPP\First\backend\cart-service\src\main\java\com\sneha\KSR_Fruits\cart\infrastructure\config\WebConfig.java
-C:\Users\SNEHA Y\KSRFruitsAPP\First\backend\cart-service\src\main\java\com\sneha\KSR_Fruits\cart\infrastructure\persistence\JpaCartItemRepository.java
-C:\Users\SNEHA Y\KSRFruitsAPP\First\backend\cart-service\src\main\java\com\sneha\KSR_Fruits\cart\interfaces\rest\controller\CartController.java

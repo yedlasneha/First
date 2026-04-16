@@ -1,6 +1,0 @@
-com\sneha\KSR_Fruits\cart\domain\model\CartItem.class
-com\sneha\KSR_Fruits\cart\infrastructure\persistence\JpaCartItemRepository.class
-com\sneha\KSR_Fruits\cart\CartServiceApplication.class
-com\sneha\KSR_Fruits\cart\infrastructure\config\WebConfig.class
-com\sneha\KSR_Fruits\cart\application\service\CartService.class
-com\sneha\KSR_Fruits\cart\interfaces\rest\controller\CartController.class
