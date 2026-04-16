@@ -7,7 +7,10 @@ export function ToastProvider({ children }) {
 
   const show = useCallback((msg, type = 'success', duration = 3000) => {
     const id = Date.now();
-    setToasts(prev => [...prev, { id, msg, type }]);
+    // Ensure msg is always a string — never render objects
+    const safeMsg = typeof msg === 'string' ? msg
+      : msg?.message || msg?.error || msg?.detail || JSON.stringify(msg) || 'Something went wrong';
+    setToasts(prev => [...prev, { id, msg: safeMsg, type }]);
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), duration);
   }, []);
 

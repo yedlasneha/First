@@ -120,8 +120,8 @@ export default function Admin() {
       }
       setBannerForm(EMPTY_BANNER); setBannerPreview(''); setEditingBanner(null);
     } catch (err) {
-      const msg = err?.response?.data?.error || err?.response?.data || err?.message || 'Unknown error';
-      showToast(`Failed: ${msg}`, 'error');
+      const msg = err?.response?.data?.error || err?.response?.data?.message || err?.message || 'Unknown error';
+      showToast(`Failed: ${String(msg)}`, 'error');
     }
   };
 
@@ -184,7 +184,7 @@ export default function Admin() {
       setForm(EMPTY_FORM); setVariants([{ ...EMPTY_VARIANT }]); fetchProducts();
       showToast(`"${form.name}" added!`);
     } catch(e) {
-      setProdErr(e.message==='Failed to fetch'?'Cannot connect to product service (port 8082).':e.message);
+      setProdErr(e.message === 'Failed to fetch' ? 'Cannot connect to server.' : (e.message || 'Add failed.'));
     } finally { setSaving(false); }
   };
 
