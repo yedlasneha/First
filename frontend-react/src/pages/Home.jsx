@@ -81,7 +81,7 @@ export default function Home() {
 
   useEffect(() => {
     bannerApi.getActive()
-      .then(r => setBanners(r.data || []))
+      .then(r => setBanners(Array.isArray(r.data) ? r.data : []))
       .catch(() => {})
       .finally(() => setLoadBanner(false));
 

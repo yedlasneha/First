@@ -580,7 +580,7 @@ export default function Admin() {
     e.preventDefault(); setPayLoad(true);
     try {
       const token = getToken();
-      const r = await fetch(`${import.meta.env.VITE_PRODUCT_URL || 'http://localhost:8082'}/payment-settings`, {
+      const r = await fetch(`${import.meta.env.VITE_API_BASE ?? ''}/api/payment-settings`, {
         method: 'POST',
         headers: { 'Content-Type':'application/json', ...(token?{Authorization:`Bearer ${token}`}:{}) },
         body: JSON.stringify(payForm),
