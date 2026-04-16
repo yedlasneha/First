@@ -7,12 +7,13 @@ import AdminNav from '../components/AdminNav';
 import st from './Admin.module.css';
 import { getToken } from '../api/tokenHelper';
 
-const PRODUCT_API  = `${import.meta.env.VITE_PRODUCT_URL || 'http://localhost:8082/api'}/products`;
-const BENEFIT_API  = `${import.meta.env.VITE_PRODUCT_URL || 'http://localhost:8082/api'}/benefits`;
-const ORDER_API    = `${import.meta.env.VITE_PRODUCT_URL || 'http://localhost:8082/api'}/admin/orders`;
-const HELP_API     = `${import.meta.env.VITE_PRODUCT_URL || 'http://localhost:8082/api'}/help`;
-const ABOUT_API    = `${import.meta.env.VITE_PRODUCT_URL || 'http://localhost:8082/api'}/about`;
-const VARIANT_API  = (pid) => `${import.meta.env.VITE_PRODUCT_URL || 'http://localhost:8082/api'}/products/${pid}/variants`;
+const BASE         = import.meta.env.VITE_API_BASE || 'http://localhost:8080';
+const PRODUCT_API  = `${BASE}/api/products`;
+const BENEFIT_API  = `${BASE}/api/benefits`;
+const ORDER_API    = `${BASE}/api/admin/orders`;
+const HELP_API     = `${BASE}/api/help`;
+const ABOUT_API    = `${BASE}/api/about`;
+const VARIANT_API  = (pid) => `${BASE}/api/products/${pid}/variants`;
 
 const EMPTY_VARIANT = { size:'', price:'', discountPercentage:0, quantity:0 };
 

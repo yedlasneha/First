@@ -1,11 +1,6 @@
 import axios from 'axios';
 
-// In production (Vercel), these are relative paths proxied to EC2.
-// In dev (localhost), they fall back to direct service ports.
-const AUTH_URL    = import.meta.env.VITE_AUTH_URL    || 'http://localhost:8081/api/auth';
-const PRODUCT_URL = import.meta.env.VITE_PRODUCT_URL || 'http://localhost:8082/api';
-const CART_URL    = import.meta.env.VITE_CART_URL    || 'http://localhost:8083/api/cart';
-const ORDER_URL   = import.meta.env.VITE_ORDER_URL   || 'http://localhost:8084/api/orders';
+const BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8080';
 
 const TOKEN_KEY = 'user_token';
 const USER_KEY  = 'user_data';
@@ -20,56 +15,49 @@ const withAuth = (config = {}) => {
   return token ? { ...config, headers: { ...config.headers, Authorization: `Bearer ${token}` } } : config;
 };
 
-// ── Auth ──────────────────────────────────────────────────────────────────
 export const authApi = {
-  sendOtp:    (email)        => axios.post(`${AUTH_URL}/send-otp`, { email }),
-  verifyOtp:  (email, otp)   => axios.post(`${AUTH_URL}/verify-otp`, { email, otp }),
-  getProfile: (userId)       => axios.get(`${AUTH_URL}/profile/${userId}`, withAuth()),
-  saveProfile:(userId, data) => axios.put(`${AUTH_URL}/profile/${userId}`, data, withAuth()),
-  validate:   (token)        => axios.post(`${AUTH_URL}/validate`, { token }),
+  sendOtp:    (email)        => axios.post(`${BASE}/api/auth/send-otp`, { email }),
+  verifyOtp:  (email, otp)   => axios.post(`${BASE}/api/auth/verify-otp`, { email, otp }),
+  getProfile: (userId)       => axios.get(`${BASE}/api/auth/profile/${userId}`, withAuth()),
+  saveProfile:(userId, data) => axios.put(`${BASE}/api/auth/profile/${userId}`, data, withAuth()),
+  validate:   (token)        => axios.post(`${BASE}/api/auth/validate`, { token }),
 };
 
-// ── Products ──────────────────────────────────────────────────────────────
 export const productApi = {
-  getAll:        ()      => axios.get(`${PRODUCT_URL}/products`),
-  getById:       (id)    => axios.get(`${PRODUCT_URL}/products/${id}`),
-  getByCategory: (catId) => axios.get(`${PRODUCT_URL}/products/category/${catId}`),
-  getByType:     (type)  => axios.get(`${PRODUCT_URL}/products/type/${type}`),
-  search:        (q)     => axios.get(`${PRODUCT_URL}/products/search?q=${encodeURIComponent(q)}`),
-  getVariants:   (pid)   => axios.get(`${PRODUCT_URL}/products/${pid}/variants`),
-  getBenefits:   (pid)   => axios.get(`${PRODUCT_URL}/benefits/product/${pid}`),
+  getAll:        ()      => axios.get(`${BASE}/api/products`),
+  getById:       (id)    => axios.get(`${BASE}/api/products/${id}`),
+  getByCategory: (catId) => axios.get(`${BASE}/api/products/category/${catId}`),
+  getByType:     (type)  => axios.get(`${BASE}/api/products/type/${type}`),
+  search:        (q)     => axios.get(`${BASE}/api/products/search?q=${encodeURIComponent(q)}`),
+  getVariants:   (pid)   => axios.get(`${BASE}/api/products/${pid}/variants`),
+  getBenefits:   (pid)   => axios.get(`${BASE}/api/benefits/product/${pid}`),
 };
 
-// ── Categories ────────────────────────────────────────────────────────────
 export const categoryApi = {
-  getAll: () => axios.get(`${PRODUCT_URL}/categories`),
+  getAll: () => axios.get(`${BASE}/api/categories`),
 };
 
-// ── Banners ───────────────────────────────────────────────────────────────
 export const bannerApi = {
-  getActive: () => axios.get(`${PRODUCT_URL}/banners`),
+  getActive: () => axios.get(`${BASE}/api/banners`),
 };
 
-// ── Cart ──────────────────────────────────────────────────────────────────
 export const cartApi = {
-  get:    (userId)                                     => axios.get(`${CART_URL}/${userId}`, withAuth()),
-  add:    (userId, productId, qty, price, productName) => axios.post(`${CART_URL}/add`, { userId, productId, quantity: qty, price, productName }, withAuth()),
-  update: (userId, productId, qty)                     => axios.put(`${CART_URL}/update`, { userId, productId, quantity: qty }, withAuth()),
-  remove: (userId, productId)                          => axios.delete(`${CART_URL}/${userId}/${productId}`, withAuth()),
-  clear:  (userId)                                     => axios.delete(`${CART_URL}/clear/${userId}`, withAuth()),
-  total:  (userId)                                     => axios.get(`${CART_URL}/total/${userId}`, withAuth()),
+  get:    (userId)                                     => axios.get(`${BASE}/api/cart/${userId}`, withAuth()),
+  add:    (userId, productId, qty, price, productName) => axios.post(`${BASE}/api/cart/add`, { userId, productId, quantity: qty, price, productName }, withAuth()),
+  update: (userId, productId, qty)                     => axios.put(`${BASE}/api/cart/update`, { userId, productId, quantity: qty }, withAuth()),
+  remove: (userId, productId)                          => axios.delete(`${BASE}/api/cart/${userId}/${productId}`, withAuth()),
+  clear:  (userId)                                     => axios.delete(`${BASE}/api/cart/clear/${userId}`, withAuth()),
+  total:  (userId)                                     => axios.get(`${BASE}/api/cart/total/${userId}`, withAuth()),
 };
 
-// ── Orders ────────────────────────────────────────────────────────────────
 export const orderApi = {
-  place:      (data) => axios.post(`${ORDER_URL}`, data, withAuth()),
-  getMyOrders:(uid)  => axios.get(`${ORDER_URL}/my?userId=${uid}`, withAuth()),
-  getById:    (id)   => axios.get(`${ORDER_URL}/${id}`, withAuth()),
+  place:       (data) => axios.post(`${BASE}/api/orders`, data, withAuth()),
+  getMyOrders: (uid)  => axios.get(`${BASE}/api/orders/my?userId=${uid}`, withAuth()),
+  getById:     (id)   => axios.get(`${BASE}/api/orders/${id}`, withAuth()),
 };
 
-// ── Misc ──────────────────────────────────────────────────────────────────
 export const miscApi = {
-  getHelp:        () => axios.get(`${PRODUCT_URL}/help`),
-  getAbout:       () => axios.get(`${PRODUCT_URL}/about`),
-  getPaySettings: () => axios.get(`${PRODUCT_URL}/payment-settings`),
+  getHelp:        () => axios.get(`${BASE}/api/help`),
+  getAbout:       () => axios.get(`${BASE}/api/about`),
+  getPaySettings: () => axios.get(`${BASE}/api/payment-settings`),
 };
