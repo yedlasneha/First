@@ -156,7 +156,7 @@ export default function LocationModal() {
           <div className="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800">
             <span className="text-base shrink-0">⚡</span>
             <p className="text-xs text-blue-700 dark:text-blue-400">
-              <span className="font-bold">Fast delivery</span> available Tri cities and Near Areas villages to Warangal .
+              <span className="font-bold">Fast delivery</span> available Tri cities and Near Villages to Warangal .
               Bulk orders can be delivered anywhere.
             </p>
           </div>
